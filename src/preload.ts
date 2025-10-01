@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   closeBrowser: () => ipcRenderer.invoke("browser:close"),
   navigate: (url: string) => ipcRenderer.invoke("browser:navigate", url),
   runStep: (step: any) => ipcRenderer.invoke("browser:runStep", step),
+  onBrowserClosed: (callback: () => void) =>
+    ipcRenderer.on("browser:closed", callback),
 });

@@ -17,10 +17,10 @@ if (require("electron-squirrel-startup")) {
 }
 
 let browserWin: BrowserWindow | null = null;
+let mainWindow: BrowserWindow | null = null;
 
 const createWindow = (): void => {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     height: 800,
     width: 1100,
     webPreferences: {
@@ -51,6 +51,10 @@ ipcMain.handle("browser:open", async (_event, url: string) => {
   await browserWin.loadURL(url);
   browserWin.on("closed", () => {
     browserWin = null;
+    // Notify the main window that the browser has closed
+    if (mainWindow) {
+      mainWindow.webContents.send("browser:closed");
+    }
   });
 });
 
@@ -58,12 +62,10 @@ ipcMain.handle("browser:close", () => {
   if (browserWin) {
     browserWin.close();
     browserWin = null;
-  }
-});
-
-ipcMain.handle("browser:navigate", async (_event, url: string) => {
-  if (browserWin) {
-    await browserWin.loadURL(url);
+    // Notify the main window that the browser has closed
+    if (mainWindow) {
+      mainWindow.webContents.send("browser:closed");
+    }
   }
 });
 

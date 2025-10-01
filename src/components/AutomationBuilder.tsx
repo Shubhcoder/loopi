@@ -89,6 +89,25 @@ export function AutomationBuilder({
     }
   }, [automation]);
 
+  // Listen for browser closure from Electron
+  useEffect(() => {
+    const handleBrowserClosed = () => {
+      setIsBrowserOpen(false);
+      setIsAutomationRunning(false);
+      setCurrentStepIndex(-1);
+      console.log("Browser closed via Electron");
+    };
+
+    if ((window as any).electronAPI) {
+      (window as any).electronAPI.onBrowserClosed(handleBrowserClosed);
+      // Cleanup listener on unmount
+      return () => {
+        // Note: Electron doesn't provide a direct way to remove specific listeners,
+        // but this is a placeholder for cleanup if needed
+      };
+    }
+  }, []);
+
   const stepTypes = [
     {
       value: "navigate",
@@ -337,7 +356,7 @@ export function AutomationBuilder({
                     key={step.id}
                     className={`relative ${
                       isCurrentStep
-                        ? "ring-2 ring-primary bg-primary/5"
+                        ? "ring-gray-400 bg-primary/5"
                         : isCompleted
                           ? "bg-green-50 border-green-200"
                           : ""
@@ -629,7 +648,7 @@ export function AutomationBuilder({
                             role="listitem"
                             className={`p-3 my-2 rounded-lg border ${
                               isCurrentStep
-                                ? "ring-2 ring-primary bg-primary/5"
+                                ? "ring-gray-400 bg-primary/5"
                                 : isCompleted
                                   ? "bg-green-50 border-green-200"
                                   : "bg-muted/50 border-border"
