@@ -9,6 +9,7 @@ import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Bot, Shield, Settings, User, Grid } from "lucide-react";
+import "./index.css";
 
 // Mock data types
 export interface Automation {
