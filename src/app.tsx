@@ -17,6 +17,8 @@ export interface Automation {
   name: string;
   description: string;
   status: "idle" | "running" | "paused";
+  nodes: Node[];
+  edges: Edge[];
   schedule: {
     type: "interval" | "fixed" | "manual";
     value?: string;
@@ -77,6 +79,27 @@ export interface AutomationStep {
   optionIndex?: number;
   // For fileUpload
   filePath?: string;
+  onAddNode?: (id: string, type: "delete" | "conditional" | "navigate" | "click" | "type" | "wait" | "screenshot" | "extract" | "extractWithLogic" | "repeat" | "apiCall" | "scroll" | "selectOption" | "fileUpload" | "hover" | "update") => void;
+}
+
+export interface Node {
+  id: string;
+  type: "automationStep" | "conditional";
+  data: {
+    step?: AutomationStep;
+    conditionType?: "elementExists" | "valueMatches";
+    selector?: string;
+    expectedValue?: string;
+    condition?: "equals" | "contains" | "greaterThan" | "lessThan";
+  };
+  position: { x: number; y: number };
+}
+
+export interface Edge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string; // For conditional nodes: "then" or "else"
 }
 
 export interface Credential {
@@ -135,6 +158,8 @@ const mockAutomations: Automation[] = [
       },
     ],
     linkedCredentials: ["gmail-creds"],
+    nodes: [],
+    edges: []
   },
   {
     id: "2",
@@ -160,6 +185,8 @@ const mockAutomations: Automation[] = [
       },
     ],
     linkedCredentials: ["twitter-creds"],
+    nodes: [],
+    edges: []
   },
 ];
 
@@ -189,7 +216,7 @@ const mockCredentials: Credential[] = [
 export default function App() {
   const [currentView, setCurrentView] = useState<
     "dashboard" | "credentials" | "builder"
-  >("dashboard");
+  >("builder");
   const [automations, setAutomations] = useState<Automation[]>(mockAutomations);
   const [credentials, setCredentials] = useState<Credential[]>(mockCredentials);
   const [selectedAutomation, setSelectedAutomation] =

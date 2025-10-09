@@ -141,25 +141,6 @@ ipcMain.handle("browser:runStep", async (_event, step) => {
         console.error("API call failed:", error);
         throw error;
       }
-    case "conditional":
-      let conditionResult = false;
-      if (step.conditionType === "elementExists") {
-        conditionResult = await wc.executeJavaScript(`
-          !!document.querySelector("${step.selector}");
-        `);
-      } else if (step.conditionType === "valueMatches") {
-        const value = await wc.executeJavaScript(`
-          document.querySelector("${step.selector}")?.innerText || "";
-        `);
-        conditionResult = value === step.expectedValue;
-      }
-      const stepsToExecute = conditionResult ? step.thenSteps : step.elseSteps;
-      const conditionalResults = [];
-      for (const subStep of stepsToExecute || []) {
-        const result = await executeSubStep(wc, subStep);
-        conditionalResults.push(result);
-      }
-      return conditionalResults;
     case "scroll":
       if (step.scrollType === "toElement") {
         await wc.executeJavaScript(`
@@ -207,6 +188,26 @@ ipcMain.handle("browser:runStep", async (_event, step) => {
       `);
       break;
   }
+});
+
+ipcMain.handle("browser:runConditional", async (_event, { conditionType, selector, expectedValue }) => {
+  if (!browserWin) return;
+
+  const wc = browserWin.webContents;
+  let conditionResult = false;
+
+  if (conditionType === "elementExists") {
+    conditionResult = await wc.executeJavaScript(`
+      !!document.querySelector("${selector}");
+    `);
+  } else if (conditionType === "valueMatches") {
+    const value = await wc.executeJavaScript(`
+      document.querySelector("${selector}")?.innerText || "";
+    `);
+    conditionResult = value === expectedValue;
+  }
+
+  return conditionResult;
 });
 
 async function executeSubStep(wc: any, step: any, index?: number) {
