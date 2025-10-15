@@ -109,7 +109,6 @@ const NodeDetails = ({
   ) => void;
 }) => {
   const { data, id } = node;
-  const isConditional = !data.step;
 
   return (
     <Card className="w-80 max-h-[80vh] overflow-y-auto">
@@ -361,7 +360,7 @@ const AutomationNode = ({
         <Handle type="target" position={Position.Top} style={{ top: -4 }} />
       )}
       <div
-        className={`w-16 h-16 rounded-full flex items-center justify-center border-2 shadow-sm text-xs font-medium capitalize text-center cursor-pointer ${selected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"}`}
+        className={`w-24 h-12 rounded-full flex items-center justify-center border-2 shadow-sm text-xs font-medium capitalize text-center cursor-pointer ${selected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"}`}
       >
         {data.step ? data.step.type : "Conditional"}
       </div>
@@ -369,15 +368,13 @@ const AutomationNode = ({
         <>
           <Handle
             type="source"
-            position={Position.Bottom}
+            position={Position.Left}
             id="if"
-            style={{ left: 8, bottom: -5 }}
           />
           <Handle
             type="source"
-            position={Position.Bottom}
+            position={Position.Right}
             id="else"
-            style={{ right: 8, bottom: -5 }}
           />
         </>
       ) : (
@@ -571,7 +568,7 @@ export function AutomationBuilder({
           position: {
             x: sourceNode ? sourceNode.position.x : 250,
             y: sourceNode
-              ? sourceNode.position.y + 300
+              ? sourceNode.position.y + 100
               : currentNodes.length * 150 + 50,
           },
         };
@@ -700,7 +697,7 @@ export function AutomationBuilder({
           },
           onAddNode: handleNodeAction,
         },
-        position: { x: 250, y: 50 },
+        position: {x: 400, y:50},
       };
       setNodes([defaultNode]);
     }
