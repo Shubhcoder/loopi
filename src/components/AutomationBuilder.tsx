@@ -1,12 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import ReactFlow, {
+  addEdge,
+  Background,
+  Controls,
+  MiniMap,
+  Connection,
+  useNodesState,
+  useEdgesState,
+  OnSelectionChangeParams,
+} from "reactflow";
+import "reactflow/dist/style.css";
 import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
@@ -17,37 +21,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Separator } from "./ui/separator";
-import { Badge } from "./ui/badge";
-import { Alert, AlertDescription } from "./ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import {
   ArrowLeft,
   Save,
   Play,
-  Plus,
-  Trash2,
   Globe,
-  Mouse,
-  Type,
-  Clock,
-  Camera,
-  Download,
-  GripVertical,
-  Shield,
-  Monitor,
-  Smartphone,
-  Eye,
-  EyeOff,
-  Target,
-  Zap,
   Pause,
   Square,
+  Settings,
 } from "lucide-react";
-import type { Automation, AutomationStep, Credential } from "../app";
+import type {
+  Automation,
+  AutomationStep,
+  Credential,
+  Node,
+  Edge,
+  NodeData,
+  EdgeData,
+  ReactFlowNode,
+  ReactFlowEdge,
+} from "../types/types";
+import { stepTypes } from "../types/types";
+
+// Automation Builder component and related sub-components
+import NodeDetails from "./automationBuilder/NodeDetails";
+import AddStepPopup from "./automationBuilder/AddStepPopup";
+import AutomationNode from "./automationBuilder/AutomationNode";
+
+const nodeTypes = {
+  automationStep: AutomationNode,
+  conditional: AutomationNode,
+};
 
 interface AutomationBuilderProps {
-  automation: Automation | null;
+  automation?: Automation;
   credentials: Credential[];
   onSave: (automation: Automation) => void;
   onCancel: () => void;
@@ -61,28 +75,277 @@ export function AutomationBuilder({
 }: AutomationBuilderProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [steps, setSteps] = useState<AutomationStep[]>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>([]);
+  // State for tracking selected node
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [schedule, setSchedule] = useState({
     type: "manual" as "interval" | "fixed" | "manual",
     interval: 30,
     unit: "minutes" as "minutes" | "hours" | "days",
     value: "09:00",
   });
-  const [currentUrl, setCurrentUrl] = useState("https://example.com");
-  const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
-  const [isRecording, setIsRecording] = useState(false);
   const [isBrowserOpen, setIsBrowserOpen] = useState(false);
   const [isAutomationRunning, setIsAutomationRunning] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(-1);
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [browserWindowId, setBrowserWindowId] = useState<string | null>(null);
-  const browserRef = useRef<HTMLIFrameElement>(null);
+  const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
+
+  // Enhanced onConnect with connection restrictions and labels for "if"/"else"
+  const onConnect = useCallback(
+    (params: Connection) => {
+      if (!params.source || !params.target) return null;
+
+      const sourceNode = nodes.find((n) => n.id === params.source);
+      if (!sourceNode) return null;
+
+      let sourceHandle: "if" | "else" | undefined = params.sourceHandle as
+        | "if"
+        | "else"
+        | undefined;
+
+      if (sourceNode.type !== "conditional") {
+        // Non-conditional: only one outgoing edge
+        const outgoing = edges.filter(
+          (e) => e.source === params.source && !e.sourceHandle
+        ).length;
+        if (outgoing >= 1) {
+          alert(
+            "Cannot add more than one outgoing edge to a non-conditional node"
+          );
+          return null;
+        }
+        sourceHandle = undefined;
+      } else {
+        // Conditional: up to two specific branches
+        if (sourceHandle === "if") {
+          const existing = edges.find(
+            (e) => e.source === params.source && e.sourceHandle === "if"
+          );
+          if (existing) {
+            alert("The 'if' branch is already connected");
+            return null;
+          }
+        } else if (sourceHandle === "else") {
+          const existing = edges.find(
+            (e) => e.source === params.source && e.sourceHandle === "else"
+          );
+          if (existing) {
+            alert("The 'else' branch is already connected");
+            return null;
+          }
+        } else {
+          // No specific handle: assign to available branch
+          const ifExisting = edges.find(
+            (e) => e.source === params.source && e.sourceHandle === "if"
+          );
+          const elseExisting = edges.find(
+            (e) => e.source === params.source && e.sourceHandle === "else"
+          );
+          if (ifExisting && elseExisting) {
+            alert("Both 'if' and 'else' branches are already connected");
+            return null;
+          }
+          sourceHandle = ifExisting ? "else" : "if";
+        }
+      }
+
+      const newEdge = {
+        id: `e${params.source}-${params.target}-${sourceHandle || "default"}`,
+        source: params.source!,
+        target: params.target!,
+        sourceHandle,
+        ...(sourceHandle && {
+          data: { label: sourceHandle === "if" ? "if" : "else" },
+        }),
+      };
+      setEdges((eds) => addEdge(newEdge, eds));
+      return newEdge;
+    },
+    [nodes, edges, setEdges]
+  );
+
+  // Updated handleNodeAction to use "if"/"else", add restrictions for programmatic adds, select new node after add, deselect on delete
+  const handleNodeAction = useCallback(
+    (
+      sourceId: string,
+      type: AutomationStep["type"] | "conditional" | "update" | "delete",
+      updates?: Partial<Node["data"]>
+    ) => {
+      if (type === "delete") {
+        if (sourceId === "1") return;
+        setNodes((nds) => {
+          return nds.filter((node) => node.id !== sourceId);
+        });
+        setEdges((eds) =>
+          eds.filter(
+            (edge) => edge.source !== sourceId && edge.target !== sourceId
+          )
+        );
+        setSelectedNodeId(null); // Deselect on delete
+        return;
+      }
+
+      if (type === "update" && updates) {
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === sourceId
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    ...updates,
+                    onAddNode: handleNodeAction,
+                  },
+                }
+              : node
+          )
+        );
+        return;
+      }
+
+      // For adding new nodes, compute newId first
+      const newId = Date.now().toString();
+
+      // Add new node
+      setNodes((currentNodes) => {
+        const sourceNode = currentNodes.find((n) => n.id === sourceId);
+        console.log("currentNodes", currentNodes);
+        const newNode: ReactFlowNode = {
+          id: newId,
+          type: type === "conditional" ? "conditional" : "automationStep",
+          data:
+            type === "conditional"
+              ? {
+                  conditionType: "elementExists",
+                  selector: "",
+                  onAddNode: handleNodeAction,
+                  nodeRunning: false,
+                }
+              : {
+                  step: {
+                    id: newId,
+                    type: type as AutomationStep["type"],
+                    description: `${
+                      stepTypes.find((s) => s.value === type)?.label || "Step"
+                    } step`,
+                    selector: type === "navigate" ? "" : "body",
+                    value: type === "navigate" ? "https://" : "",
+                  },
+                  onAddNode: handleNodeAction,
+                  nodeRunning: false,
+                },
+          position: {
+            x: sourceNode ? sourceNode.position.x : 250,
+            y: sourceNode
+              ? sourceNode.position.y + 100
+              : currentNodes.length * 150 + 50,
+          },
+        };
+
+        return [...currentNodes, newNode];
+      });
+
+      // Add edge with restrictions
+      if (type === "conditional") {
+        // When adding conditional node, connect with default (from source perspective)
+        setEdges((eds) =>
+          addEdge(
+            { id: `e${sourceId}-${newId}`, source: sourceId, target: newId },
+            eds
+          )
+        );
+      } else {
+        setNodes((currentNodes) => {
+          const sourceNode = currentNodes.find((n) => n.id === sourceId);
+          console.log("sourceNode", sourceNode);
+
+          if (sourceNode?.type === "conditional") {
+            setEdges((currentEdges) => {
+              const outgoingEdges = currentEdges.filter(
+                (e) => e.source === sourceId
+              );
+
+              if (outgoingEdges.length >= 2) {
+                alert(
+                  "Cannot add more than two outgoing edges from a conditional node"
+                );
+                return currentEdges; // Return unchanged
+              }
+
+              const handle = outgoingEdges.length === 0 ? "if" : "else";
+              return addEdge(
+                {
+                  id: `e${sourceId}-${newId}-${handle}`,
+                  source: sourceId,
+                  target: newId,
+                  sourceHandle: handle,
+                  data: { label: handle }, // Add label for edge
+                },
+                currentEdges
+              );
+            });
+          } else {
+            // Non-conditional: check restriction before adding
+            setEdges((currentEdges) => {
+              const outgoingCount = currentEdges.filter(
+                (e) => e.source === sourceId && !e.sourceHandle
+              ).length;
+              if (outgoingCount >= 1) {
+                alert(
+                  "Cannot add more than one outgoing edge from a non-conditional node"
+                );
+                return currentEdges;
+              }
+              return addEdge(
+                {
+                  id: `e${sourceId}-${newId}`,
+                  source: sourceId,
+                  target: newId,
+                },
+                currentEdges
+              );
+            });
+          }
+
+          return currentNodes; // Return unchanged since we're just reading
+        });
+      }
+
+      // Select the newly added node
+      setSelectedNodeId(newId);
+    },
+    [setNodes, setEdges, setSelectedNodeId]
+  );
+
+  // Handle selection change
+  const handleSelectionChange = useCallback(
+    ({ nodes: selectedNodes }: OnSelectionChangeParams) => {
+      setSelectedNodeId(selectedNodes[0]?.id || null);
+    },
+    []
+  );
 
   useEffect(() => {
     if (automation) {
       setName(automation.name);
       setDescription(automation.description);
-      setSteps(automation.steps);
+      setNodes(
+        automation.nodes.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            onAddNode: handleNodeAction,
+            nodeRunning: false,
+          },
+        }))
+      );
+      setEdges(
+        automation.edges.map(
+          (e): ReactFlowEdge => ({
+            ...e,
+            data: undefined,
+          })
+        )
+      );
       if (automation.schedule.type !== "manual") {
         setSchedule({
           type: automation.schedule.type,
@@ -91,78 +354,38 @@ export function AutomationBuilder({
           value: automation.schedule.value || "09:00",
         });
       }
+    } else {
+      // Initialize with a default navigation node
+      const defaultNode: ReactFlowNode = {
+        id: "1",
+        type: "automationStep",
+        data: {
+          step: {
+            id: "1",
+            type: "navigate",
+            description: "Navigate to URL",
+            selector: "",
+            value: "https://",
+          },
+          onAddNode: handleNodeAction,
+          nodeRunning: false,
+        },
+        position: { x: 400, y: 50 },
+      };
+      setNodes([defaultNode]);
     }
-  }, [automation]);
+  }, [automation, handleNodeAction]);
 
-  const stepTypes = [
-    {
-      value: "navigate",
-      label: "Navigate",
-      icon: Globe,
-      description: "Go to a URL",
-    },
-    {
-      value: "click",
-      label: "Click",
-      icon: Mouse,
-      description: "Click an element",
-    },
-    { value: "type", label: "Type", icon: Type, description: "Enter text" },
-    {
-      value: "wait",
-      label: "Wait",
-      icon: Clock,
-      description: "Wait for a duration",
-    },
-    {
-      value: "screenshot",
-      label: "Screenshot",
-      icon: Camera,
-      description: "Take a screenshot",
-    },
-    {
-      value: "extract",
-      label: "Extract",
-      icon: Download,
-      description: "Extract data",
-    },
-  ];
-
-  const addStep = (type: AutomationStep["type"]) => {
-    const newStep: AutomationStep = {
-      id: Date.now().toString(),
-      type,
-      description: `${stepTypes.find((s) => s.value === type)?.label} step`,
-      selector: type === "navigate" ? "" : "body",
-      value: type === "navigate" ? "https://" : "",
+  useEffect(() => {
+    const handleBrowserClosed = () => {
+      setIsBrowserOpen(false);
+      setIsAutomationRunning(false);
+      setCurrentNodeId(null);
     };
-    setSteps([...steps, newStep]);
-  };
-
-  const updateStep = (stepId: string, updates: Partial<AutomationStep>) => {
-    setSteps(
-      steps.map((step) => (step.id === stepId ? { ...step, ...updates } : step))
-    );
-  };
-
-  const removeStep = (stepId: string) => {
-    setSteps(steps.filter((step) => step.id !== stepId));
-  };
-
-  const moveStep = (stepId: string, direction: "up" | "down") => {
-    const index = steps.findIndex((step) => step.id === stepId);
-    if (index === -1) return;
-
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= steps.length) return;
-
-    const newSteps = [...steps];
-    [newSteps[index], newSteps[newIndex]] = [
-      newSteps[newIndex],
-      newSteps[index],
-    ];
-    setSteps(newSteps);
-  };
+    if ((window as any).electronAPI) {
+      (window as any).electronAPI.onBrowserClosed(handleBrowserClosed);
+    }
+  }, []);
 
   const handleSave = () => {
     const automationData: Automation = {
@@ -170,112 +393,172 @@ export function AutomationBuilder({
       name,
       description,
       status: "idle",
-      steps,
+      nodes: nodes.map(({ id, type, data, position }) => ({
+        id,
+        type,
+        data: {
+          step: data.step,
+          conditionType: data.conditionType,
+          selector: data.selector,
+          expectedValue: data.expectedValue,
+          condition: data.condition,
+        },
+        position,
+      })) as Node[],
+      edges: edges.map(({ id, source, target, sourceHandle }) => ({
+        id,
+        source,
+        target,
+        sourceHandle,
+      })) as Edge[],
+      steps: nodes
+        .map((node) => node.data.step)
+        .filter((step) => step !== undefined) as AutomationStep[],
       schedule:
         schedule.type === "manual"
           ? { type: "manual" }
           : schedule.type === "fixed"
-          ? { type: "fixed", value: schedule.value }
-          : {
-              type: "interval",
-              interval: schedule.interval,
-              unit: schedule.unit,
-            },
-      linkedCredentials: steps
-        .filter((step) => step.credentialId)
-        .map((step) => step.credentialId!)
-        .filter((id, index, arr) => arr.indexOf(id) === index), // Remove duplicates
+            ? { type: "fixed", value: schedule.value }
+            : {
+                type: "interval",
+                interval: schedule.interval,
+                unit: schedule.unit,
+              },
+      linkedCredentials: nodes
+        .filter((node) => node.data.step?.credentialId)
+        .map((node) => node.data.step!.credentialId!)
+        .filter((id, index, arr) => arr.indexOf(id) === index),
       lastRun: automation?.lastRun,
     };
-
     onSave(automationData);
   };
 
   const openBrowser = async () => {
     try {
-      await (window as any).electronAPI.openBrowser(currentUrl);
+      await (window as any).electronAPI.openBrowser("https://google.com");
       setIsBrowserOpen(true);
-      console.log("Browser opened via Electron");
     } catch (err) {
       console.error("Failed to open browser", err);
     }
   };
 
   const closeBrowser = async () => {
-    await (window as any).electronAPI.closeBrowser();
-    setIsBrowserOpen(false);
-    setIsAutomationRunning(false);
-    setCurrentStepIndex(-1);
-    console.log("Browser closed");
-  };
-
-  const navigateToUrl = async (url: string) => {
-    setCurrentUrl(url);
-    if (isBrowserOpen) {
-      await (window as any).electronAPI.navigate(url);
-      console.log(`Navigating browser window to: ${url}`);
+    try {
+      await (window as any).electronAPI.closeBrowser();
+      setIsBrowserOpen(false);
+      setIsAutomationRunning(false);
+      setCurrentNodeId(null);
+    } catch (err) {
+      console.error("Failed to close browser", err);
     }
   };
 
-  const executeStep = async (step: AutomationStep, index: number) => {
-    setCurrentStepIndex(index);
-
-    try {
-      await (window as any).electronAPI.runStep(step);
-    } catch (err) {
-      console.error("Step execution failed:", err);
+  const executeNode = async (node: ReactFlowNode) => {
+    setCurrentNodeId(node.id);
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === node.id ? { ...n, data: { ...n.data, nodeRunning: true } } : n
+      )
+    );
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    if (node.type === "automationStep" && node.data.step) {
+      return await (window as any).electronAPI.runStep(node.data.step);
+    } else if (node.type === "conditional") {
+      const conditionResult = await (window as any).electronAPI.runConditional({
+        conditionType: node.data.conditionType,
+        selector: node.data.selector,
+        expectedValue: node.data.expectedValue,
+      });
+      console.log("Condition result:", conditionResult);
+      return { conditionResult };
     }
   };
 
   const runAutomation = async () => {
-    if (steps.length === 0) {
-      alert("No steps to execute");
+    if (nodes.length === 0) {
+      alert("No nodes to execute");
       return;
     }
 
+    if (!isBrowserOpen) {
+      await openBrowser();
+    }
+
     setIsAutomationRunning(true);
-    setCurrentStepIndex(-1);
+    setCurrentNodeId(null);
 
     try {
-      for (let i = 0; i < steps.length; i++) {
-        await executeStep(steps[i], i);
-        // Small delay between steps for visibility
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
+      const visited = new Set<string>();
+      const executeGraph = async (nodeId: string) => {
+        if (visited.has(nodeId)) return;
+        visited.add(nodeId);
 
+        const node = nodes.find((n) => n.id === nodeId) as
+          | ReactFlowNode
+          | undefined;
+        if (!node) return;
+
+        const result = await executeNode(node);
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === node.id
+              ? { ...n, data: { ...n.data, nodeRunning: false } }
+              : n
+          )
+        );
+        let nextNodes: string[] = [];
+
+        console.log("Execution result:", result);
+
+        if (
+          node.type === "conditional" &&
+          result.conditionResult !== undefined
+        ) {
+          const branch = result.conditionResult ? "if" : "else";
+          console.log("Taking branch:", branch);
+          console.log("Node ID:", nodeId);
+          console.log("Edges:", edges);
+          nextNodes = edges
+            .filter((e) => e.source === nodeId && e.sourceHandle === branch)
+            .map((e) => e.target);
+          console.log("Next nodes:", nextNodes);
+        } else {
+          nextNodes = edges
+            .filter((e) => e.source === nodeId)
+            .map((e) => e.target);
+          console.log("else Next nodes:", nextNodes);
+        }
+
+        for (const nextNodeId of nextNodes) {
+          await executeGraph(nextNodeId);
+        }
+      };
+
+      await executeGraph("1"); // Start with the default navigation node
       alert("Automation completed successfully!");
     } catch (error) {
       console.error("Automation failed:", error);
       alert("Automation failed. Check console for details.");
     } finally {
       setIsAutomationRunning(false);
-      setCurrentStepIndex(-1);
+      setCurrentNodeId(null);
     }
   };
 
   const pauseAutomation = () => {
     setIsAutomationRunning(false);
-    console.log("Automation paused");
   };
 
   const stopAutomation = () => {
     setIsAutomationRunning(false);
-    setCurrentStepIndex(-1);
-    console.log("Automation stopped");
+    setCurrentNodeId(null);
   };
 
-  const testAutomation = () => {
-    setIsRecording(true);
-    // Mock test execution
-    setTimeout(() => {
-      setIsRecording(false);
-      alert("Test completed successfully!");
-    }, 2000);
-  };
+  // Get selected node for panels
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
       <header className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -292,543 +575,59 @@ export function AutomationBuilder({
               </p>
             </div>
           </div>
-
           <div className="flex items-center gap-2">
-            {!isBrowserOpen ? (
-              <Button variant="outline" onClick={openBrowser}>
-                <Globe className="h-4 w-4 mr-2" />
-                Open Browser
-              </Button>
-            ) : (
-              <>
-                <Button variant="outline" onClick={closeBrowser}>
-                  <Square className="h-4 w-4 mr-2" />
-                  Close Browser
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
                 </Button>
-                {!isAutomationRunning ? (
-                  <Button
-                    variant="default"
-                    onClick={runAutomation}
-                    disabled={steps.length === 0}
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Run Automation
-                  </Button>
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={pauseAutomation}>
-                      <Pause className="h-4 w-4 mr-2" />
-                      Pause
-                    </Button>
-                    <Button variant="destructive" onClick={stopAutomation}>
-                      <Square className="h-4 w-4 mr-2" />
-                      Stop
-                    </Button>
-                  </>
-                )}
-              </>
-            )}
-            <Button
-              variant="outline"
-              onClick={testAutomation}
-              disabled={isRecording}
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              {isRecording ? "Testing..." : "Test"}
-            </Button>
-            <Button onClick={handleSave} disabled={!name.trim()}>
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex-1 flex">
-        {/* Real Browser */}
-        <div className="flex-1 flex flex-col bg-muted/30">
-          <div className="border-b border-border bg-card p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === "desktop" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("desktop")}
-                >
-                  <Monitor className="h-4 w-4 mr-1" />
-                  Desktop
-                </Button>
-                <Button
-                  variant={viewMode === "mobile" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("mobile")}
-                >
-                  <Smartphone className="h-4 w-4 mr-1" />
-                  Mobile
-                </Button>
-              </div>
-
-              <div className="flex-1 max-w-md">
-                <Input
-                  placeholder="Enter URL to navigate to"
-                  value={currentUrl}
-                  onChange={(e) => setCurrentUrl(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      navigateToUrl(currentUrl);
-                    }
-                  }}
-                />
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigateToUrl(currentUrl)}
-                disabled={!isBrowserOpen}
-              >
-                Navigate
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowInstructions(!showInstructions)}
-              >
-                {showInstructions ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex-1 relative">
-            {!isBrowserOpen ? (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                <div className="text-center space-y-4">
-                  <Globe className="h-16 w-16 mx-auto text-muted-foreground/50" />
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">No Browser Open</h3>
-                    <p className="text-sm">
-                      Click "Open Browser" to start automation
-                    </p>
-                  </div>
-                  <Button onClick={openBrowser} className="mt-4">
-                    <Globe className="h-4 w-4 mr-2" />
-                    Open Browser
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="h-full relative">
-                {/* Real Browser Window */}
-                <iframe
-                  ref={browserRef}
-                  src={currentUrl}
-                  className={`w-full h-full border-0 ${
-                    viewMode === "mobile" ? "max-w-sm mx-auto" : ""
-                  }`}
-                  title="Automation Browser"
-                />
-
-                {/* Automation Instructions Overlay */}
-                {showInstructions && (
-                  <div className="absolute top-4 right-4 w-80 bg-card border border-border rounded-lg shadow-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium flex items-center gap-2">
-                        <Target className="h-4 w-4" />
-                        Automation Instructions
-                      </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowInstructions(false)}
-                      >
-                        <EyeOff className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    {isAutomationRunning && (
-                      <Alert>
-                        <Zap className="h-4 w-4" />
-                        <AlertDescription>
-                          Automation is running... Step {currentStepIndex + 1}{" "}
-                          of {steps.length}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium">
-                        Current Step:
-                      </Label>
-                      {currentStepIndex >= 0 && steps[currentStepIndex] ? (
-                        <div className="bg-muted p-2 rounded text-xs">
-                          <div className="font-medium">
-                            {steps[currentStepIndex].description}
-                          </div>
-                          <div className="text-muted-foreground mt-1">
-                            {steps[currentStepIndex].type === "navigate" &&
-                              `URL: ${steps[currentStepIndex].value}`}
-                            {steps[currentStepIndex].type === "click" &&
-                              `Selector: ${steps[currentStepIndex].selector}`}
-                            {steps[currentStepIndex].type === "type" &&
-                              `Text: ${steps[currentStepIndex].value}`}
-                            {steps[currentStepIndex].type === "wait" &&
-                              `Duration: ${steps[currentStepIndex].value}s`}
-                            {steps[currentStepIndex].type === "screenshot" &&
-                              "Taking screenshot..."}
-                            {steps[currentStepIndex].type === "extract" &&
-                              `Selector: ${steps[currentStepIndex].selector}`}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-xs text-muted-foreground">
-                          No step executing
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium">Next Steps:</Label>
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {steps
-                          .slice(currentStepIndex + 1, currentStepIndex + 4)
-                          .map((step, index) => (
-                            <div
-                              key={step.id}
-                              className="text-xs bg-muted/50 p-2 rounded"
-                            >
-                              {currentStepIndex + index + 2}. {step.description}
-                            </div>
-                          ))}
-                        {steps.length === 0 && (
-                          <div className="text-xs text-muted-foreground">
-                            No steps defined
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Element Highlight Overlay */}
-                {isAutomationRunning && currentStepIndex >= 0 && (
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
-                      Step {currentStepIndex + 1}:{" "}
-                      {steps[currentStepIndex]?.description}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Steps Editor */}
-        <div className="w-96 border-l border-border bg-card flex flex-col">
-          <Tabs defaultValue="steps" className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 m-4 mb-0">
-              <TabsTrigger value="steps">Steps</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
-
-            <TabsContent
-              value="steps"
-              className="flex-1 overflow-hidden m-4 mt-4"
-            >
-              <div className="h-full flex flex-col space-y-4">
-                {/* Add Step Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  {stepTypes.map((stepType) => (
-                    <Button
-                      key={stepType.value}
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        addStep(stepType.value as AutomationStep["type"])
-                      }
-                      className="h-auto p-2 flex flex-col items-center gap-1"
-                      disabled={isAutomationRunning}
-                    >
-                      <stepType.icon className="h-4 w-4" />
-                      <span className="text-xs">{stepType.label}</span>
-                    </Button>
-                  ))}
-                </div>
-
-                <Separator />
-
-                {/* Steps List */}
-                <div className="flex-1 overflow-y-auto space-y-3">
-                  {steps.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <div className="space-y-2">
-                        <Plus className="h-8 w-8 mx-auto" />
-                        <p className="text-sm">No steps yet</p>
-                        <p className="text-xs">
-                          Add steps to build your automation
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    steps.map((step, index) => {
-                      const stepType = stepTypes.find(
-                        (s) => s.value === step.type
-                      );
-                      const isCurrentStep = currentStepIndex === index;
-                      const isCompleted = currentStepIndex > index;
-                      return (
-                        <Card
-                          key={step.id}
-                          className={`relative ${
-                            isCurrentStep
-                              ? "ring-2 ring-primary bg-primary/5"
-                              : isCompleted
-                              ? "bg-green-50 border-green-200"
-                              : ""
-                          }`}
-                        >
-                          <CardHeader className="pb-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                <Badge
-                                  variant={
-                                    isCurrentStep
-                                      ? "default"
-                                      : isCompleted
-                                      ? "secondary"
-                                      : "outline"
-                                  }
-                                  className={`text-xs ${
-                                    isCurrentStep
-                                      ? "bg-primary"
-                                      : isCompleted
-                                      ? "bg-green-100 text-green-800"
-                                      : ""
-                                  }`}
-                                >
-                                  {index + 1}
-                                </Badge>
-                                {stepType && (
-                                  <stepType.icon className="h-4 w-4" />
-                                )}
-                                <span className="text-sm font-medium">
-                                  {stepType?.label}
-                                </span>
-                                {isCurrentStep && isAutomationRunning && (
-                                  <Badge
-                                    variant="default"
-                                    className="bg-blue-100 text-blue-800 text-xs"
-                                  >
-                                    <Zap className="h-3 w-3 mr-1" />
-                                    Running
-                                  </Badge>
-                                )}
-                                {isCompleted && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="bg-green-100 text-green-800 text-xs"
-                                  >
-                                    ✓ Done
-                                  </Badge>
-                                )}
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeStep(step.id)}
-                                disabled={isAutomationRunning}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </CardHeader>
-
-                          <CardContent className="pt-0 space-y-3">
-                            <div className="space-y-2">
-                              <Label className="text-xs">Description</Label>
-                              <Input
-                                value={step.description}
-                                onChange={(e) =>
-                                  updateStep(step.id, {
-                                    description: e.target.value,
-                                  })
-                                }
-                                className="text-xs"
-                                placeholder="Step description"
-                                disabled={isAutomationRunning}
-                              />
-                            </div>
-
-                            {step.type === "navigate" && (
-                              <div className="space-y-2">
-                                <Label className="text-xs">URL</Label>
-                                <Input
-                                  value={step.value || ""}
-                                  onChange={(e) =>
-                                    updateStep(step.id, {
-                                      value: e.target.value,
-                                    })
-                                  }
-                                  placeholder="https://example.com"
-                                  className="text-xs"
-                                  disabled={isAutomationRunning}
-                                />
-                              </div>
-                            )}
-
-                            {(step.type === "click" ||
-                              step.type === "type" ||
-                              step.type === "extract") && (
-                              <div className="space-y-2">
-                                <Label className="text-xs">CSS Selector</Label>
-                                <Input
-                                  value={step.selector || ""}
-                                  onChange={(e) =>
-                                    updateStep(step.id, {
-                                      selector: e.target.value,
-                                    })
-                                  }
-                                  placeholder="button, .class, #id"
-                                  className="text-xs"
-                                  disabled={isAutomationRunning}
-                                />
-                              </div>
-                            )}
-
-                            {step.type === "type" && (
-                              <div className="space-y-2">
-                                <Label className="text-xs">Text to Type</Label>
-                                <Input
-                                  value={step.value || ""}
-                                  onChange={(e) =>
-                                    updateStep(step.id, {
-                                      value: e.target.value,
-                                    })
-                                  }
-                                  placeholder="Text to enter"
-                                  className="text-xs"
-                                  disabled={isAutomationRunning}
-                                />
-
-                                {credentials.length > 0 && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs">
-                                      Or use credential
-                                    </Label>
-                                    <Select
-                                      value={step.credentialId || ""}
-                                      onValueChange={(value) =>
-                                        updateStep(step.id, {
-                                          credentialId: value || undefined,
-                                        })
-                                      }
-                                      disabled={isAutomationRunning}
-                                    >
-                                      <SelectTrigger className="text-xs">
-                                        <SelectValue placeholder="Select credential" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {credentials.map((cred) => (
-                                          <SelectItem
-                                            key={cred.id}
-                                            value={cred.id}
-                                          >
-                                            <div className="flex items-center gap-2">
-                                              <Shield className="h-3 w-3" />
-                                              {cred.name}
-                                            </div>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {step.type === "wait" && (
-                              <div className="space-y-2">
-                                <Label className="text-xs">
-                                  Duration (seconds)
-                                </Label>
-                                <Input
-                                  type="number"
-                                  value={step.value || "1"}
-                                  onChange={(e) =>
-                                    updateStep(step.id, {
-                                      value: e.target.value,
-                                    })
-                                  }
-                                  className="text-xs"
-                                  min="1"
-                                  disabled={isAutomationRunning}
-                                />
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="settings"
-              className="flex-1 overflow-y-auto m-4 mt-4"
-            >
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Automation Name</Label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter automation name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe what this automation does"
-                    rows={3}
-                  />
-                </div>
-
-                <Separator />
-
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Automation Settings</DialogTitle>
+                </DialogHeader>
                 <div className="space-y-4">
-                  <Label>Schedule</Label>
-
-                  <Select
-                    value={schedule.type}
-                    onValueChange={(value) =>
-                      setSchedule((prev) => ({
-                        ...prev,
-                        type: value as typeof schedule.type,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manual">Manual only</SelectItem>
-                      <SelectItem value="interval">Repeat interval</SelectItem>
-                      <SelectItem value="fixed">Fixed time</SelectItem>
-                    </SelectContent>
-                  </Select>
-
+                  <div className="space-y-2">
+                    <Label>Automation Name</Label>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter automation name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Describe what this automation does"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Schedule</Label>
+                    <Select
+                      value={schedule.type}
+                      onValueChange={(value) =>
+                        setSchedule((prev) => ({
+                          ...prev,
+                          type: value as typeof schedule.type,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual only</SelectItem>
+                        <SelectItem value="interval">
+                          Repeat interval
+                        </SelectItem>
+                        <SelectItem value="fixed">Fixed time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {schedule.type === "interval" && (
                     <div className="flex gap-2">
                       <Input
@@ -863,7 +662,6 @@ export function AutomationBuilder({
                       </Select>
                     </div>
                   )}
-
                   {schedule.type === "fixed" && (
                     <Input
                       type="time"
@@ -877,10 +675,78 @@ export function AutomationBuilder({
                     />
                   )}
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+              </DialogContent>
+            </Dialog>
+            {!isBrowserOpen ? (
+              <Button variant="outline" onClick={openBrowser}>
+                <Globe className="h-4 w-4 mr-2" />
+                Open Browser
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={closeBrowser}>
+                  <Square className="h-4 w-4 mr-2" />
+                  Close Browser
+                </Button>
+                {!isAutomationRunning ? (
+                  <Button
+                    variant="default"
+                    onClick={runAutomation}
+                    disabled={nodes.length === 0}
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Run Automation
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={pauseAutomation}>
+                      <Pause className="h-4 w-4 mr-2" />
+                      Pause
+                    </Button>
+                    <Button variant="destructive" onClick={stopAutomation}>
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+            <Button onClick={handleSave} disabled={!name.trim()}>
+              <Save className="h-4 w-4 mr-2" />
+              Save
+            </Button>
+          </div>
         </div>
+      </header>
+      {/* Added relative positioning for absolute panels within canvas */}
+      <div className="flex-1 relative">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onSelectionChange={handleSelectionChange} // For tracking selection
+          nodeTypes={nodeTypes}
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+        {/* Node addition popup on left */}
+        {selectedNodeId && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50">
+            <AddStepPopup
+              onAdd={(stepType) => handleNodeAction(selectedNodeId, stepType)}
+            />
+          </div>
+        )}
+        {/* Node details panel on top-right */}
+        {selectedNodeId && selectedNode && (
+          <div className="absolute top-4 right-4 z-50 w-80">
+            <NodeDetails node={selectedNode} onUpdate={handleNodeAction} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Alert, AlertDescription } from './ui/alert';
@@ -20,7 +19,7 @@ import {
   Lock,
   AlertTriangle
 } from 'lucide-react';
-import type { Credential } from '../app';
+import type { Credential } from '../types/types';
 
 interface CredentialVaultProps {
   credentials: Credential[];

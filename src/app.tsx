@@ -1,67 +1,12 @@
-import React from 'react'
 import * as ReactDOM from 'react-dom/client';
-
 import { useState } from "react";
 import { Dashboard } from "./components/Dashboard";
 import { CredentialVault } from "./components/CredentialVault";
 import { AutomationBuilder } from "./components/AutomationBuilder";
-import { Button } from "./components/ui/button";
-import { Card } from "./components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
-import { Bot, Shield, Settings, User } from "lucide-react";
-
-// Mock data types
-export interface Automation {
-  id: string;
-  name: string;
-  description: string;
-  status: "idle" | "running" | "paused";
-  schedule: {
-    type: "interval" | "fixed" | "manual";
-    value?: string;
-    interval?: number;
-    unit?: "minutes" | "hours" | "days";
-  };
-  lastRun?: {
-    timestamp: Date;
-    success: boolean;
-    duration?: number;
-  };
-  steps: AutomationStep[];
-  linkedCredentials: string[];
-}
-
-export interface AutomationStep {
-  id: string;
-  type: "navigate" | "click" | "type" | "wait" | "screenshot" | "extract";
-  selector?: string;
-  value?: string;
-  credentialId?: string;
-  description: string;
-}
-
-export interface Credential {
-  id: string;
-  name: string;
-  type: "username_password" | "api_key" | "oauth_token" | "custom";
-  lastUpdated: Date;
-  // In real app, values would be encrypted
-  encryptedValues: Record<string, string>;
-}
-
-export interface ExecutionLog {
-  id: string;
-  automationId: string;
-  timestamp: Date;
-  success: boolean;
-  duration: number;
-  steps: {
-    stepId: string;
-    success: boolean;
-    error?: string;
-    screenshot?: string;
-  }[];
-}
+import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { Bot, Shield, Grid } from "lucide-react";
+import { Automation, Credential } from "./types/types";
+import "./index.css";
 
 // Mock data
 const mockAutomations: Automation[] = [
@@ -96,6 +41,8 @@ const mockAutomations: Automation[] = [
       },
     ],
     linkedCredentials: ["gmail-creds"],
+    nodes: [],
+    edges: []
   },
   {
     id: "2",
@@ -121,6 +68,8 @@ const mockAutomations: Automation[] = [
       },
     ],
     linkedCredentials: ["twitter-creds"],
+    nodes: [],
+    edges: []
   },
 ];
 
@@ -150,12 +99,11 @@ const mockCredentials: Credential[] = [
 export default function App() {
   const [currentView, setCurrentView] = useState<
     "dashboard" | "credentials" | "builder"
-  >("dashboard");
+  >("builder");
   const [automations, setAutomations] = useState<Automation[]>(mockAutomations);
   const [credentials, setCredentials] = useState<Credential[]>(mockCredentials);
   const [selectedAutomation, setSelectedAutomation] =
     useState<Automation | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock login state
 
   const handleCreateAutomation = () => {
     setSelectedAutomation(null);
@@ -181,29 +129,6 @@ export default function App() {
     setCurrentView("dashboard");
   };
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md p-8">
-          <div className="text-center space-y-6">
-            <div className="flex items-center justify-center">
-              <Bot className="h-12 w-12 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold">Automation Platform</h1>
-              <p className="text-muted-foreground">
-                Sign in to manage your automations
-              </p>
-            </div>
-            <Button onClick={() => setIsLoggedIn(true)} className="w-full">
-              Sign In (Mock)
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -220,18 +145,20 @@ export default function App() {
               onValueChange={(value) => setCurrentView(value as any)}
             >
               <TabsList>
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="dashboard">
+                  <Grid className="h-4 w-4 mr-1" />
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger value="builder">
+                  <Bot className="h-4 w-4 mr-1" />
+                  Builder
+                </TabsTrigger>
                 <TabsTrigger value="credentials">
                   <Shield className="h-4 w-4 mr-1" />
                   Credentials
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-
-            <Button variant="outline" size="sm">
-              <User className="h-4 w-4 mr-1" />
-              Profile
-            </Button>
           </div>
         </div>
       </header>

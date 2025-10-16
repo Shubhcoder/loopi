@@ -19,7 +19,7 @@ import {
   Timer
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import type { Automation } from '../app';
+import type { Automation } from '../types/types';
 
 interface DashboardProps {
   automations: Automation[];
@@ -147,7 +147,7 @@ export function Dashboard({
   return (
     <div className="p-6 space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Total Automations</CardTitle>
@@ -156,38 +156,24 @@ export function Dashboard({
             <div className="text-2xl font-semibold">{totalAutomations}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Currently Running</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-green-600">{runningCount}</div>
+            <div className="text-2xl font-semibold text-green-600">
+              {runningCount}
+            </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Successful Runs</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">{successfulRuns}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button onClick={onCreateAutomation} size="sm" className="w-full">
-              <Plus className="h-4 w-4 mr-1" />
-              New Automation
-            </Button>
-            <Button onClick={onManageCredentials} variant="outline" size="sm" className="w-full">
-              <Shield className="h-4 w-4 mr-1" />
-              Manage Credentials
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -208,7 +194,9 @@ export function Dashboard({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Your Automations</h2>
-          <p className="text-sm text-muted-foreground">{totalAutomations} total</p>
+          <p className="text-sm text-muted-foreground">
+            {totalAutomations} total
+          </p>
         </div>
 
         {automations.length === 0 ? (
@@ -220,7 +208,9 @@ export function Dashboard({
                 </div>
                 <div>
                   <h3 className="font-medium">No automations yet</h3>
-                  <p className="text-sm text-muted-foreground">Get started by creating your first automation</p>
+                  <p className="text-sm text-muted-foreground">
+                    Get started by creating your first automation
+                  </p>
                 </div>
                 <Button onClick={onCreateAutomation}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -237,12 +227,16 @@ export function Dashboard({
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-base">{automation.name}</CardTitle>
+                        <CardTitle className="text-base">
+                          {automation.name}
+                        </CardTitle>
                         {getStatusBadge(automation.status)}
                       </div>
-                      <CardDescription>{automation.description}</CardDescription>
+                      <CardDescription>
+                        {automation.description}
+                      </CardDescription>
                     </div>
-                    
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
@@ -250,7 +244,9 @@ export function Dashboard({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditAutomation(automation)}>
+                        <DropdownMenuItem
+                          onClick={() => onEditAutomation(automation)}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -258,24 +254,26 @@ export function Dashboard({
                     </DropdownMenu>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-4">
                   {/* Controls */}
                   <div className="flex items-center gap-2">
-                    {automation.status === 'idle' && (
-                      <Button 
+                    {automation.status === "idle" && (
+                      <Button
                         onClick={() => handleStartAutomation(automation.id)}
                         size="sm"
                         disabled={executingAutomations.has(automation.id)}
                       >
                         <Play className="h-4 w-4 mr-1" />
-                        {executingAutomations.has(automation.id) ? 'Starting...' : 'Start'}
+                        {executingAutomations.has(automation.id)
+                          ? "Starting..."
+                          : "Start"}
                       </Button>
                     )}
-                    
-                    {automation.status === 'running' && (
+
+                    {automation.status === "running" && (
                       <>
-                        <Button 
+                        <Button
                           onClick={() => handlePauseAutomation(automation.id)}
                           variant="outline"
                           size="sm"
@@ -283,7 +281,7 @@ export function Dashboard({
                           <Pause className="h-4 w-4 mr-1" />
                           Pause
                         </Button>
-                        <Button 
+                        <Button
                           onClick={() => handleStopAutomation(automation.id)}
                           variant="destructive"
                           size="sm"
@@ -293,17 +291,17 @@ export function Dashboard({
                         </Button>
                       </>
                     )}
-                    
-                    {automation.status === 'paused' && (
+
+                    {automation.status === "paused" && (
                       <>
-                        <Button 
+                        <Button
                           onClick={() => handleResumeAutomation(automation.id)}
                           size="sm"
                         >
                           <Play className="h-4 w-4 mr-1" />
                           Resume
                         </Button>
-                        <Button 
+                        <Button
                           onClick={() => handleStopAutomation(automation.id)}
                           variant="destructive"
                           size="sm"
@@ -326,7 +324,7 @@ export function Dashboard({
                       </div>
                       <p>{formatSchedule(automation.schedule)}</p>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Timer className="h-4 w-4" />
@@ -345,7 +343,7 @@ export function Dashboard({
                         <span>{formatLastRun(automation.lastRun)}</span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Shield className="h-4 w-4" />
@@ -355,11 +353,12 @@ export function Dashboard({
                     </div>
                   </div>
 
-                  {automation.status === 'running' && (
+                  {automation.status === "running" && (
                     <Alert>
                       <Play className="h-4 w-4" />
                       <AlertDescription>
-                        This automation is currently running. You can pause or stop it using the controls above.
+                        This automation is currently running. You can pause or
+                        stop it using the controls above.
                       </AlertDescription>
                     </Alert>
                   )}
