@@ -54,6 +54,7 @@ import { stepTypes } from "../types/types";
 import NodeDetails from "./automationBuilder/NodeDetails";
 import AddStepPopup from "./automationBuilder/AddStepPopup";
 import AutomationNode from "./automationBuilder/AutomationNode";
+import { set } from "react-hook-form/dist";
 
 const nodeTypes = {
   automationStep: AutomationNode,
@@ -210,6 +211,44 @@ export function AutomationBuilder({
       setNodes((currentNodes) => {
         const sourceNode = currentNodes.find((n) => n.id === sourceId);
         console.log("currentNodes", currentNodes);
+
+        // check if sourceNode can have more nodes connected
+        if (sourceNode) {
+          if (sourceNode.type === "conditional") {
+            let maxOutgoing = false;
+            setEdges((edges) => {
+              const outgoingEdges = edges.filter((e) => e.source === sourceId);
+
+              if (outgoingEdges.length >= 2) {
+                alert(
+                  "Cannot add more than two outgoing edges from a conditional node."
+                );
+                maxOutgoing = true;
+                return edges; // Return unchanged
+              }
+
+              return edges;
+            });
+            if (maxOutgoing) return currentNodes;
+          } else {
+            let maxOutgoing = false;
+            setEdges((edges) => {
+              const outgoingCount = edges.filter(
+                (e) => e.source === sourceId && !e.sourceHandle
+              ).length;
+              if (outgoingCount >= 1) {
+                alert(
+                  "Cannot add more than one outgoing edge from a non-conditional node."
+                );
+                maxOutgoing = true;
+                return edges; // Return unchanged
+              }
+              return edges;
+            });
+            if (maxOutgoing) return currentNodes;
+          }
+        }
+
         const newNode: ReactFlowNode = {
           id: newId,
           type: type === "conditional" ? "conditional" : "automationStep",
@@ -266,10 +305,7 @@ export function AutomationBuilder({
               );
 
               if (outgoingEdges.length >= 2) {
-                alert(
-                  "Cannot add more than two outgoing edges from a conditional node"
-                );
-                return currentEdges; // Return unchanged
+                return currentEdges;
               }
 
               const handle = outgoingEdges.length === 0 ? "if" : "else";
@@ -291,9 +327,6 @@ export function AutomationBuilder({
                 (e) => e.source === sourceId && !e.sourceHandle
               ).length;
               if (outgoingCount >= 1) {
-                alert(
-                  "Cannot add more than one outgoing edge from a non-conditional node"
-                );
                 return currentEdges;
               }
               return addEdge(
