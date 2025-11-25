@@ -1,5 +1,5 @@
 import { Handle, NodeProps, Position } from "reactflow";
-import { NodeData } from "../../types/types";
+import { NodeData } from "../../types";
 
 const AutomationNode = ({
   id,

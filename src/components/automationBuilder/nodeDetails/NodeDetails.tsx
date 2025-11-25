@@ -1,4 +1,4 @@
-import { ReactFlowNode, Node } from "../../../types/types";
+import { ReactFlowNode, Node } from "../../../types";
 import { Card, CardContent, CardHeader } from "../../ui/card";
 import NodeHeader from "./NodeHeader";
 import StepEditor from "./StepEditor";

@@ -33,7 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import type { Automation } from "../types/types";
+import type { Automation } from "../types";
 import { exportAutomation, exportAllAutomations, importAutomation, importAllAutomations } from "../utils/automationIO";
 
 interface DashboardProps {

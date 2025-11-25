@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ReactFlowNode, ReactFlowEdge } from "../components/../types/types";
+import type { ReactFlowNode, ReactFlowEdge } from "../types";
 
 interface UseExecutionArgs {
   nodes: ReactFlowNode[];

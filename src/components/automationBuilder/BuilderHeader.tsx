@@ -19,7 +19,7 @@ import {
 } from "../ui/dialog";
 import { ArrowLeft, Save, Play, Globe, Pause, Square, Settings, Download } from "lucide-react";
 import { exportAutomation } from "../../utils/automationIO";
-import type { Automation } from "../../types/types";
+import type { Automation } from "../../types";
 
 interface BuilderHeaderProps {
   name: string;

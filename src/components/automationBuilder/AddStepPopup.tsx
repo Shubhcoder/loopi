@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { Button } from "../ui/button";
-import { AutomationStep, stepTypes } from "../../types/types";
+import { AutomationStep, stepTypes } from "../../types";
 
 interface AddStepPopupProps {
   onAdd: (type: AutomationStep["type"] | "conditional") => void;

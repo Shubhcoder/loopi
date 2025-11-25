@@ -39,7 +39,7 @@ import {
   Lock,
   AlertTriangle,
 } from "lucide-react";
-import type { Credential } from "../types/types";
+import type { Credential } from "../types";
 
 interface CredentialVaultProps {
   credentials: Credential[];

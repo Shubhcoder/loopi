@@ -5,7 +5,7 @@ import { CredentialVault } from "./components/CredentialVault";
 import { AutomationBuilder } from "./components/AutomationBuilder";
 import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Bot, Shield, Grid } from "lucide-react";
-import { Automation, Credential } from "./types/types";
+import { Automation, Credential } from "./types";
 import "./index.css";
 
 // Mock credentials (keeping these as they're separate from automations)

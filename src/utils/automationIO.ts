@@ -1,4 +1,4 @@
-import type { Automation } from "../types/types";
+import type { Automation } from "../types";
 
 /**
  * Export automation to JSON file

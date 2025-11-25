@@ -15,7 +15,7 @@ import type {
   EdgeData,
   ReactFlowNode,
   ReactFlowEdge,
-} from "../types/types";
+} from "../types";
 
 import AutomationNode from "./automationBuilder/AutomationNode";
 import BuilderHeader from "./automationBuilder/BuilderHeader";
@@ -102,12 +102,26 @@ export function AutomationBuilder({
           })
         )
       );
-      if (automation.schedule.type !== "manual") {
+      if (automation.schedule.type === "manual") {
         setSchedule({
-          type: automation.schedule.type,
-          interval: automation.schedule.interval || 30,
-          unit: automation.schedule.unit || "minutes",
-          value: automation.schedule.value || "09:00",
+          type: "manual",
+          interval: 30,
+          unit: "minutes",
+          value: "09:00",
+        });
+      } else if (automation.schedule.type === "interval") {
+        setSchedule({
+          type: "interval",
+          interval: automation.schedule.interval,
+          unit: automation.schedule.unit,
+          value: "09:00",
+        });
+      } else if (automation.schedule.type === "fixed") {
+        setSchedule({
+          type: "fixed",
+          interval: 30,
+          unit: "minutes",
+          value: automation.schedule.value,
         });
       }
     } else {
@@ -120,7 +134,6 @@ export function AutomationBuilder({
             id: "1",
             type: "navigate",
             description: "Navigate to URL",
-            selector: "",
             value: "https://",
           },
           onAddNode: handleNodeAction,
@@ -146,7 +159,6 @@ export function AutomationBuilder({
           conditionType: data.conditionType,
           selector: data.selector,
           expectedValue: data.expectedValue,
-          condition: data.condition,
         },
         position,
       })) as Node[],
@@ -170,8 +182,8 @@ export function AutomationBuilder({
                 unit: schedule.unit,
               },
       linkedCredentials: nodes
-        .filter((node) => node.data.step?.credentialId)
-        .map((node) => node.data.step!.credentialId!)
+        .filter((node) => node.data.step?.type === "type" && !!(node.data.step as any).credentialId)
+        .map((node) => (node.data.step as any).credentialId as string)
         .filter((id, index, arr) => arr.indexOf(id) === index),
       lastRun: automation?.lastRun,
     };
@@ -194,7 +206,6 @@ export function AutomationBuilder({
         conditionType: data.conditionType,
         selector: data.selector,
         expectedValue: data.expectedValue,
-        condition: data.condition,
       },
       position,
     })) as Node[],
@@ -218,8 +229,8 @@ export function AutomationBuilder({
               unit: schedule.unit,
             },
     linkedCredentials: nodes
-      .filter((node) => node.data.step?.credentialId)
-      .map((node) => node.data.step!.credentialId!)
+      .filter((node) => node.data.step?.type === "type" && !!(node.data.step as any).credentialId)
+      .map((node) => (node.data.step as any).credentialId as string)
       .filter((id, index, arr) => arr.indexOf(id) === index),
     lastRun: automation?.lastRun,
   } : undefined;

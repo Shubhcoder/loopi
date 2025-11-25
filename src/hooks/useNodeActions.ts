@@ -8,8 +8,8 @@ import type {
   EdgeData,
   ReactFlowNode,
   ReactFlowEdge,
-} from "../components/../types/types";
-import { stepTypes } from "../components/../types/types";
+} from "../types";
+import { stepTypes } from "../types";
 
 interface UseNodeActionsArgs {
   nodes: ReactFlowNode[];
@@ -185,15 +185,111 @@ export default function useNodeActions({
                   nodeRunning: false,
                 }
               : {
-                  step: {
-                    id: newId,
-                    type: type as AutomationStep["type"],
-                    description: `${
-                      stepTypes.find((s) => s.value === type)?.label || "Step"
-                    } step`,
-                    selector: type === "navigate" ? "" : "body",
-                    value: type === "navigate" ? "https://" : "",
-                  },
+                  step: (() => {
+                    const label = stepTypes.find((s) => s.value === type as any)?.label || "Step";
+                    switch (type) {
+                      case "navigate":
+                        return {
+                          id: newId,
+                          type: "navigate" as const,
+                          description: `${label} step`,
+                          value: "https://",
+                        };
+                      case "click":
+                        return {
+                          id: newId,
+                          type: "click" as const,
+                          description: `${label} step`,
+                          selector: "body",
+                        };
+                      case "type":
+                        return {
+                          id: newId,
+                          type: "type" as const,
+                          description: `${label} step`,
+                          selector: "body",
+                          value: "",
+                        };
+                      case "wait":
+                        return {
+                          id: newId,
+                          type: "wait" as const,
+                          description: `${label} step`,
+                          value: "1",
+                        };
+                      case "screenshot":
+                        return {
+                          id: newId,
+                          type: "screenshot" as const,
+                          description: `${label} step`,
+                          savePath: "",
+                        };
+                      case "selectOption":
+                        return {
+                          id: newId,
+                          type: "selectOption" as const,
+                          description: `${label} step`,
+                          selector: "",
+                          optionValue: "",
+                        };
+                      case "extract":
+                        return {
+                          id: newId,
+                          type: "extract" as const,
+                          description: `${label} step`,
+                          selector: "",
+                        };
+                      case "extractWithLogic":
+                        return {
+                          id: newId,
+                          type: "extractWithLogic" as const,
+                          description: `${label} step`,
+                          selector: "",
+                          condition: "equals" as const,
+                          expectedValue: "",
+                        };
+                      case "apiCall":
+                        return {
+                          id: newId,
+                          type: "apiCall" as const,
+                          description: `${label} step`,
+                          method: "GET" as const,
+                          url: "",
+                          headers: {},
+                          body: "",
+                        };
+                      case "scroll":
+                        return {
+                          id: newId,
+                          type: "scroll" as const,
+                          description: `${label} step`,
+                          scrollType: "toElement" as const,
+                          selector: "",
+                        };
+                      case "fileUpload":
+                        return {
+                          id: newId,
+                          type: "fileUpload" as const,
+                          description: `${label} step`,
+                          selector: "",
+                          filePath: "",
+                        };
+                      case "hover":
+                        return {
+                          id: newId,
+                          type: "hover" as const,
+                          description: `${label} step`,
+                          selector: "",
+                        };
+                      default:
+                        return {
+                          id: newId,
+                          type: "click" as const,
+                          description: `${label} step`,
+                          selector: "body",
+                        };
+                    }
+                  })(),
                   onAddNode: handleNodeAction,
                   nodeRunning: false,
                 },
