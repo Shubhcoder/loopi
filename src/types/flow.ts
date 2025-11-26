@@ -26,9 +26,13 @@ export interface NodePosition { x: number; y: number }
   conditionType?: ConditionType;
   selector?: string;
   expectedValue?: string;
-  startIndex?: number; // default 1
-  increment?: number; // default 1
-  maxIterations?: number; // optional safeguard
+  condition?: "equals" | "contains" | "greaterThan" | "lessThan";
+  // Optional post-processing for extracted text before evaluation
+  transformType?: "none" | "stripCurrency" | "stripNonNumeric" | "regexReplace" | "removeChars";
+  transformPattern?: string; // regex pattern when using regexReplace
+  transformReplace?: string; // replacement string for regexReplace
+  transformChars?: string; // chars to remove when using removeChars
+  parseAsNumber?: boolean; // whether to parse both extracted and expected values as numbers
 }
 
 export interface Node {

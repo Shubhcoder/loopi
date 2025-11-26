@@ -80,7 +80,13 @@ export default function useExecution({ nodes, edges, setNodes }: UseExecutionArg
         const conditionParams = {
           conditionType: node.data.conditionType,
           selector: node.data.selector,
-          expectedValue: node.data.expectedValue
+          expectedValue: node.data.expectedValue,
+          condition: node.data.condition,
+          transformType: node.data.transformType,
+          transformPattern: node.data.transformPattern,
+          transformReplace: node.data.transformReplace,
+          transformChars: node.data.transformChars,
+          parseAsNumber: node.data.parseAsNumber,
         };
 
         const { conditionResult, effectiveSelector } = await (window as any).electronAPI.runConditional(conditionParams);

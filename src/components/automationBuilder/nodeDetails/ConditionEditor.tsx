@@ -2,6 +2,7 @@ import React from "react";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { Switch } from "../../ui/switch";
 import { SelectorButton } from "./customComponents";
 
 /**
@@ -72,58 +73,44 @@ export default function ConditionEditor({
             <Label className="text-xs">Expected Value</Label>
             <Input value={data.expectedValue || ""} onChange={(e) => onUpdate(id, "update", { expectedValue: e.target.value })} placeholder="Expected value" className="text-xs" />
           </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Post-process Extracted Text</Label>
+            <Select value={data.transformType || "none"} onValueChange={(value) => onUpdate(id, "update", { transformType: value })}>
+              <SelectTrigger className="text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="stripCurrency">Strip Currency Symbols (e.g. $ , €)</SelectItem>
+                <SelectItem value="stripNonNumeric">Strip Non-numeric Characters</SelectItem>
+                <SelectItem value="removeChars">Remove Specific Characters</SelectItem>
+                <SelectItem value="regexReplace">Regex Replace</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {data.transformType === "removeChars" && (
+              <div className="mt-2">
+                <Label className="text-[11px]">Chars to remove</Label>
+                <Input value={data.transformChars || ""} onChange={(e) => onUpdate(id, "update", { transformChars: e.target.value })} placeholder="e.g. $ ," className="text-xs" />
+              </div>
+            )}
+
+            {data.transformType === "regexReplace" && (
+              <div className="mt-2 space-y-2">
+                <Label className="text-[11px]">Regex pattern</Label>
+                <Input value={data.transformPattern || ""} onChange={(e) => onUpdate(id, "update", { transformPattern: e.target.value })} placeholder="e.g. ([^0-9.])" className="text-xs" />
+                <Label className="text-[11px]">Replacement</Label>
+                <Input value={data.transformReplace || ""} onChange={(e) => onUpdate(id, "update", { transformReplace: e.target.value })} placeholder="e.g. ''" className="text-xs" />
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-2">
+              <Switch checked={!!data.parseAsNumber} onCheckedChange={(v: boolean) => onUpdate(id, "update", { parseAsNumber: v })} />
+              <Label className="text-xs">Parse as number before comparison</Label>
+            </div>
+          </div>
         </div>
       )}
-
-      <div className="space-y-2 mt-4">
-        <Label className="text-xs">Transform extracted value</Label>
-        <p className="text-[11px] text-muted-foreground">Optionally clean up or convert the extracted text before comparing.</p>
-        <div className="grid grid-cols-1 gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px] text-muted-foreground">Regex replace (pattern)</Label>
-            <Input
-              value={data.transform?.regex || ""}
-              onChange={(e) => onUpdate(id, "update", { transform: { ...(data.transform || {}), regex: e.target.value } })}
-              placeholder="e.g. $ or ,"
-              className="text-xs"
-            />
-            <Label className="text-[10px] text-muted-foreground">Replacement</Label>
-            <Input
-              value={data.transform?.replace || ""}
-              onChange={(e) => onUpdate(id, "update", { transform: { ...(data.transform || {}), replace: e.target.value } })}
-              placeholder="e.g. empty to remove"
-              className="text-xs"
-            />
-          </div>
-          <div className="flex gap-2 items-center">
-            <input
-              id={`parseNumber-${id}`}
-              type="checkbox"
-              checked={!!data.transform?.parseNumber}
-              onChange={(e) => onUpdate(id, "update", { transform: { ...(data.transform || {}), parseNumber: e.target.checked } })}
-            />
-            <Label htmlFor={`parseNumber-${id}`} className="text-xs">Parse number (strip non-numeric characters)</Label>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px] text-muted-foreground">Strip characters (literal)</Label>
-            <Input
-              value={data.transform?.stripChars || ""}
-              onChange={(e) => onUpdate(id, "update", { transform: { ...(data.transform || {}), stripChars: e.target.value } })}
-              placeholder="e.g. $ ,"
-              className="text-xs"
-            />
-          </div>
-          <div className="flex gap-2 items-center">
-            <input
-              id={`toLower-${id}`}
-              type="checkbox"
-              checked={!!data.transform?.toLower}
-              onChange={(e) => onUpdate(id, "update", { transform: { ...(data.transform || {}), toLower: e.target.checked } })}
-            />
-            <Label htmlFor={`toLower-${id}`} className="text-xs">Case-insensitive compare</Label>
-          </div>
-        </div>
-      </div>
     </>
   );
 }

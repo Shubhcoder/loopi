@@ -281,75 +281,76 @@ export class AutomationExecutor {
       selector: string;
       expectedValue?: string;
       nodeId?: string;
-      transform?: {
-        regex?: string;
-        replace?: string;
-        parseNumber?: boolean;
-        stripChars?: string;
-        toLower?: boolean;
-      };
+      condition?: string;
+      transformType?: string;
+      transformPattern?: string;
+      transformReplace?: string;
+      transformChars?: string;
+      parseAsNumber?: boolean;
     }
   ): Promise<{
     conditionResult: boolean;
     effectiveSelector?: string | null;
-    processedValue?: string | number | null;
   }> {
     const wc = browserWindow.webContents;
-    const { conditionType, selector, expectedValue, transform } = config as any;
+    const { conditionType, selector, expectedValue } = config;
 
     const runtimeSelector = this.substituteVariables(selector);
 
+    const applyTransform = (raw: string) => {
+      if (!raw) return raw;
+      const t = config.transformType || "none";
+      let s = raw;
+      if (t === "stripCurrency") {
+        s = s.replace(/[$€£,\s]/g, "");
+      } else if (t === "stripNonNumeric") {
+        s = s.replace(/[^0-9.\-]/g, "");
+      } else if (t === "removeChars" && config.transformChars) {
+        const chars = config.transformChars.split("");
+        for (const c of chars) s = s.split(c).join("");
+      } else if (t === "regexReplace" && config.transformPattern) {
+        try {
+          const re = new RegExp(config.transformPattern, "g");
+          s = s.replace(re, config.transformReplace ?? "");
+        } catch (e) {
+          // invalid regex — leave original
+        }
+      }
+      return s;
+    };
+
     let conditionResult = false;
-    let processedValue: string | number | null = null;
 
     if (conditionType === "elementExists") {
       conditionResult = await wc.executeJavaScript(`!!document.querySelector(${JSON.stringify(runtimeSelector)});`);
     } else if (conditionType === "valueMatches") {
-      const raw = await wc.executeJavaScript(`document.querySelector(${JSON.stringify(runtimeSelector)})?.innerText || "";`);
+      const rawValue: string = await wc.executeJavaScript(`document.querySelector(${JSON.stringify(runtimeSelector)})?.innerText || "";`);
+      const transformed = applyTransform(rawValue);
+      const expected = expectedValue || "";
+      const op = config.condition || "equals";
 
-      // Apply regex replacement if provided
-      let processed: string = raw || "";
-      if (transform?.regex) {
-        try {
-          const re = new RegExp(transform.regex, "g");
-          processed = processed.replace(re, transform.replace ?? "");
-        } catch (e) {
-          console.debug("Invalid transform regex:", transform.regex, e);
-        }
-      }
+      // console.log("Extracted Value (raw):", rawValue);
+      // console.log("Extracted Value (transformed):", transformed);
+      // console.log("Expected Value:", expected);
 
-      // Strip literal characters if provided
-      if (transform?.stripChars) {
-        const esc = String(transform.stripChars).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        processed = processed.replace(new RegExp("[" + esc + "]", "g"), "");
-      }
-
-      // Case normalization
-      let expectedProcessed: string | undefined = expectedValue;
-      if (transform?.toLower) {
-        processed = processed.toLowerCase();
-        expectedProcessed = expectedProcessed?.toLowerCase();
-      }
-
-      // Numeric parsing path - strip non-numeric and compare as numbers
-      if (transform?.parseNumber) {
-        const numA = parseFloat(processed.replace(/[^0-9.-]+/g, ""));
-        const numB = expectedProcessed ? parseFloat(String(expectedProcessed).replace(/[^0-9.-]+/g, "")) : NaN;
-        processedValue = isNaN(numA) ? null : numA;
-        if (!isNaN(numA) && !isNaN(numB)) {
-          conditionResult = numA === numB;
-        } else {
-          conditionResult = false;
-        }
+      if (config.parseAsNumber) {
+      const a = parseFloat(transformed.replace(/[^0-9.\-]/g, ""));
+      const b = parseFloat(expected.replace(/[^0-9.\-]/g, ""));
+      conditionResult = !isNaN(a) && !isNaN(b) && (
+        op === "greaterThan" ? a > b :
+        op === "lessThan" ? a < b :
+        op === "contains" ? transformed.includes(expected) :
+        a === b
+      );
       } else {
-        // String comparison
-        processedValue = processed;
-        conditionResult = processed === (expectedProcessed ?? "");
+      conditionResult = 
+        op === "contains" ? transformed.includes(expected) :
+        op === "greaterThan" ? parseFloat(transformed) > parseFloat(expected) :
+        op === "lessThan" ? parseFloat(transformed) < parseFloat(expected) :
+        transformed === expected;
       }
-
-      console.debug("[AutomationExecutor] evaluateConditional raw:", raw, "processed:", processedValue, "expected:", expectedValue);
     }
 
-    return { conditionResult, effectiveSelector: runtimeSelector, processedValue };
+    return { conditionResult, effectiveSelector: runtimeSelector };
   }
 }
