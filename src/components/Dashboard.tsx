@@ -9,16 +9,10 @@ import {
 import {
   Plus,
   Edit,
-  MoreVertical,
   Download,
   Upload,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+ 
 import type { Automation } from "../types";
 import { exportAutomation, importAutomation } from "../utils/automationIO";
 
@@ -105,27 +99,14 @@ export function Dashboard({
                       </CardDescription>
                     </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => onEditAutomation(automation)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => exportAutomation(automation)}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Export
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="ml-4 flex flex-col items-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => onEditAutomation(automation)} title="Edit">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => exportAutomation(automation)} title="Export">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
               </Card>

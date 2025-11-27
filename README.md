@@ -7,10 +7,9 @@ A powerful Electron-based desktop application for creating, managing, and execut
 - **Visual Workflow Editor**: Drag-and-drop node graph using ReactFlow
 - **Browser Automation**: Execute automation steps in real Chromium windows
 - **Interactive Element Picker**: Click-to-select CSS selectors from live pages
-- **Conditional Logic**: Branching flows and dynamic loops with template variables
+- **Conditional Logic**: Branching flows; use condition nodes together with variables for explicit loop control
 - **Import/Export**: Save and share automation workflows as JSON
 - **Scheduling**: Manual, interval-based, or fixed-time execution
-- **Credential Management**: Secure storage for API keys and login credentials
 - **TypeScript**: Fully typed codebase with discriminated unions for type safety
 
 ## 📦 Tech Stack
@@ -34,8 +33,7 @@ src/
 │   └── ipcHandlers.ts        # IPC communication bridge
 ├── components/               # React components
 │   ├── AutomationBuilder.tsx # Visual workflow editor
-│   ├── Dashboard.tsx         # Automation management
-│   ├── CredentialVault.tsx   # Credential storage
+│   ├── Dashboard.tsx         # Automation management (Edit/Export actions rendered as buttons)
 │   └── automationBuilder/    # Builder subcomponents
 │       ├── BuilderHeader.tsx
 │       ├── BuilderCanvas.tsx
@@ -107,13 +105,18 @@ switch (step.type) {
 
 ### IPC Security
 
-Uses **context isolation** with `contextBridge` for secure renderer ↔ main communication:
+Uses **context isolation** with `contextBridge` for secure renderer ↔ main communication.
+
+The preload API now exposes additional executor helpers (variable init / query) and conditional execution helpers:
 
 ```typescript
 // preload.ts exposes limited API
 contextBridge.exposeInMainWorld("electronAPI", {
   openBrowser: (url) => ipcRenderer.invoke("browser:open", url),
   runStep: (step) => ipcRenderer.invoke("browser:runStep", step),
+  runConditional: (condition) => ipcRenderer.invoke("browser:runConditional", condition),
+  initVariables: (vars) => ipcRenderer.invoke("executor:initVariables", vars),
+  getVariables: () => ipcRenderer.invoke("executor:getVariables"),
   pickSelector: (url) => ipcRenderer.invoke("pick-selector", url),
 });
 ```
@@ -130,18 +133,22 @@ contextBridge.exposeInMainWorld("electronAPI", {
 6. Selector sent back to renderer via IPC
 7. Step configuration auto-populated
 
-### Dynamic Loops with Template Variables
+### Variable-driven loops and template substitution
 
-Conditional nodes support `loopUntilFalse` with `${index}` template:
+The project now uses an explicit variable system instead of the legacy `loopUntilFalse` behavior.
+
+- Add a `Set Variable` or `Modify Variable` step to declare and change variables as your flow runs.
+- Use double-curly tokens `{{variableName}}` inside selectors, step inputs, and API payloads; those tokens are substituted at runtime by the executor.
+
+Example selector using a variable:
 
 ```
-Selector: .product-list > div:nth-of-type(${index})
-Start Index: 1
-Increment: 1
-Max Iterations: 100
+Selector: .product-list > div:nth-of-type({{index}})
 ```
 
-Executor injects current index value into selector on each iteration.
+Control how `{{index}}` changes by placing `Modify Variable` steps (increment/decrement/append/set) in your graph. This makes loop semantics explicit and easier to maintain.
+
+Conditional nodes also support post-processing of extracted text (strip currency symbols, remove non-numeric characters, regex replace, and parse-as-number) to make comparisons robust (for example, comparing `$29.99` numerically).
 
 ### Graph Execution
 
@@ -213,11 +220,12 @@ export function CustomStep({ step, id, onUpdate }: StepProps) {
 
 3. **Add execution logic in `src/main/automationExecutor.ts`**:
 ```typescript
-case "custom":
-  await wc.executeJavaScript(`
-    console.log("${step.customField}");
-  `);
+case "custom": {
+  // Use the executor's substitution helper to resolve any `{{var}}` tokens
+  const value = this.substituteVariables(step.customField);
+  await wc.executeJavaScript(`console.log(${JSON.stringify(value)});`);
   break;
+}
 ```
 
 4. **Update `useNodeActions.ts`** to provide default initial values when creating new nodes.

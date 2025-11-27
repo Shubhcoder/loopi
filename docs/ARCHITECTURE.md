@@ -59,8 +59,6 @@ React-based UI running in Chromium with restricted privileges.
 App (root)
 ├── Dashboard
 │   └── Automation list & management
-├── CredentialVault
-│   └── Secure credential storage
 └── AutomationBuilder
     ├── BuilderHeader
     │   ├── Settings dialog (name, description, schedule)
@@ -319,7 +317,7 @@ No global state library (Redux, Zustand) needed—props drilling is minimal due 
 
 - [ ] Create new automation with multiple step types
 - [ ] Add conditional node with if/else branches
-- [ ] Test loopUntilFalse with dynamic index
+- [ ] Test variable-driven loops using `Set Variable` / `Modify Variable` and `{{index}}` substitution
 - [ ] Pick selectors from live page
 - [ ] Execute automation and verify steps
 - [ ] Import/export workflows
@@ -327,7 +325,7 @@ No global state library (Redux, Zustand) needed—props drilling is minimal due 
 
 ## Known Limitations
 
-1. **Loop State Persistence**: Loop indices reset on app restart
+1. **Loop/Variable State Persistence**: Runtime variables (e.g. loop indices) are not persisted across restarts unless stored in automation data
 2. **Credential Encryption**: Placeholder implementation (use `electron-store` + crypto for production)
 3. **Error Recovery**: Limited retry logic in automation execution
 4. **Concurrency**: One automation runs at a time
@@ -337,7 +335,7 @@ No global state library (Redux, Zustand) needed—props drilling is minimal due 
 
 - [ ] Persistent execution logs with screenshots
 - [ ] Subflow/reusable component support
-- [ ] Variable system for passing data between steps
+  
 - [ ] Headless execution mode (no browser UI)
 - [ ] Cloud sync for workflows
 - [ ] Collaborative editing
