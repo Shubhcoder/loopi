@@ -1,0 +1,473 @@
+{
+  "id": "1764247549405",
+  "name": "Pagination Price Extraction with Variable Loop",
+  "description": "Pagination Price Extraction with Variable Loop Example",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1",
+          "type": "navigate",
+          "description": "Navigate to URL",
+          "value": "https://testautomationpractice.blogspot.com/"
+        }
+      },
+      "position": {
+        "x": 400,
+        "y": 50
+      }
+    },
+    {
+      "id": "1764244463197",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764244463197",
+          "type": "wait",
+          "description": "Wait step",
+          "value": "2"
+        }
+      },
+      "position": {
+        "x": 400,
+        "y": 150
+      }
+    },
+    {
+      "id": "1764244573117",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764244573117",
+          "type": "setVariable",
+          "description": "Set Variable step",
+          "variableName": "indexVal",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 575.7377019601511,
+        "y": 159.34166168722362
+      }
+    },
+    {
+      "id": "1764244585233",
+      "type": "conditional",
+      "data": {
+        "conditionType": "elementExists",
+        "selector": "html > body > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div > div:nth-of-type(5) > div > div > table > tbody > tr:nth-of-type({{indexVal}}) > td:nth-of-type(3)"
+      },
+      "position": {
+        "x": 395.81576900094876,
+        "y": 363.947436663504
+      }
+    },
+    {
+      "id": "1764244619493",
+      "type": "conditional",
+      "data": {
+        "conditionType": "valueMatches",
+        "selector": "html > body > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div > div:nth-of-type(5) > div > div > table > tbody > tr:nth-of-type({{indexVal}}) > td:nth-of-type(3)",
+        "expectedValue": "10"
+      },
+      "position": {
+        "x": 288,
+        "y": 445
+      }
+    },
+    {
+      "id": "1764244673397",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764244673397",
+          "type": "click",
+          "description": "Click step",
+          "selector": "html > body > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div > div:nth-of-type(5) > div > div > table > tbody > tr:nth-of-type({{indexVal}}) > td:nth-of-type(4) > input"
+        }
+      },
+      "position": {
+        "x": 195,
+        "y": 541
+      }
+    },
+    {
+      "id": "1764244756319",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764244756319",
+          "type": "wait",
+          "description": "Wait step",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 195,
+        "y": 641
+      }
+    },
+    {
+      "id": "1764244792448",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764244792448",
+          "type": "modifyVariable",
+          "description": "Modify Variable step",
+          "variableName": "indexVal",
+          "operation": "increment",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 195,
+        "y": 741
+      }
+    },
+    {
+      "id": "1764244860702",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764244860702",
+          "type": "wait",
+          "description": "Wait step",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 477,
+        "y": 440
+      }
+    },
+    {
+      "id": "1764245017245",
+      "type": "conditional",
+      "data": {
+        "conditionType": "elementExists",
+        "selector": "html > body > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div > div:nth-of-type(5) > div > div > ul > li:nth-of-type({{pageVal}}) > a"
+      },
+      "position": {
+        "x": 477,
+        "y": 540
+      }
+    },
+    {
+      "id": "1764245092610",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764245092610",
+          "type": "setVariable",
+          "description": "Set Variable step",
+          "variableName": "pageVal",
+          "value": "2"
+        }
+      },
+      "position": {
+        "x": 575.7377019601511,
+        "y": 259.3416616872236
+      }
+    },
+    {
+      "id": "1764245205490",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764245205490",
+          "type": "click",
+          "description": "Click step",
+          "selector": "html > body > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div > div:nth-of-type(5) > div > div > ul > li:nth-of-type({{pageVal}}) > a"
+        }
+      },
+      "position": {
+        "x": 417.02602234693256,
+        "y": 635.8157690009488
+      }
+    },
+    {
+      "id": "1764245224129",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764245224129",
+          "type": "wait",
+          "description": "Wait step",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 417.02602234693256,
+        "y": 735.8157690009488
+      }
+    },
+    {
+      "id": "1764245234403",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764245234403",
+          "type": "wait",
+          "description": "Wait step",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 594.1584679734341,
+        "y": 633.026281668248
+      }
+    },
+    {
+      "id": "1764245238182",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764245238182",
+          "type": "screenshot",
+          "description": "Screenshot step",
+          "savePath": ""
+        }
+      },
+      "position": {
+        "x": 594.1584679734341,
+        "y": 733.026281668248
+      }
+    },
+    {
+      "id": "1764245283938",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764245283938",
+          "type": "modifyVariable",
+          "description": "Modify Variable step",
+          "variableName": "pageVal",
+          "operation": "increment",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 417.02602234693256,
+        "y": 835.8157690009488
+      }
+    },
+    {
+      "id": "1764245460534",
+      "type": "automationStep",
+      "data": {
+        "step": {
+          "id": "1764245460534",
+          "type": "modifyVariable",
+          "description": "Modify Variable step",
+          "variableName": "indexVal",
+          "operation": "set",
+          "value": "1"
+        }
+      },
+      "position": {
+        "x": 417.02602234693256,
+        "y": 935.8157690009488
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1-1764244463197",
+      "source": "1",
+      "target": "1764244463197"
+    },
+    {
+      "id": "e1764244463197-1764244573117",
+      "source": "1764244463197",
+      "target": "1764244573117"
+    },
+    {
+      "id": "e1764244619493-1764244673397-if",
+      "source": "1764244619493",
+      "target": "1764244673397",
+      "sourceHandle": "if"
+    },
+    {
+      "id": "e1764244673397-1764244756319",
+      "source": "1764244673397",
+      "target": "1764244756319"
+    },
+    {
+      "id": "e1764244619493-1764244756319-else",
+      "source": "1764244619493",
+      "target": "1764244756319",
+      "sourceHandle": "else"
+    },
+    {
+      "id": "e1764244756319-1764244792448",
+      "source": "1764244756319",
+      "target": "1764244792448"
+    },
+    {
+      "id": "e1764244792448-1764244585233-default",
+      "source": "1764244792448",
+      "target": "1764244585233"
+    },
+    {
+      "id": "e1764244585233-1764244860702-else",
+      "source": "1764244585233",
+      "target": "1764244860702",
+      "sourceHandle": "else"
+    },
+    {
+      "id": "e1764244585233-1764244619493-if",
+      "source": "1764244585233",
+      "target": "1764244619493",
+      "sourceHandle": "if"
+    },
+    {
+      "id": "e1764244860702-1764245017245",
+      "source": "1764244860702",
+      "target": "1764245017245"
+    },
+    {
+      "id": "e1764244573117-1764245092610",
+      "source": "1764244573117",
+      "target": "1764245092610"
+    },
+    {
+      "id": "e1764245092610-1764244585233-default",
+      "source": "1764245092610",
+      "target": "1764244585233"
+    },
+    {
+      "id": "e1764245017245-1764245205490-if",
+      "source": "1764245017245",
+      "target": "1764245205490",
+      "sourceHandle": "if"
+    },
+    {
+      "id": "e1764245205490-1764245224129",
+      "source": "1764245205490",
+      "target": "1764245224129"
+    },
+    {
+      "id": "e1764245017245-1764245234403-else",
+      "source": "1764245017245",
+      "target": "1764245234403",
+      "sourceHandle": "else"
+    },
+    {
+      "id": "e1764245234403-1764245238182",
+      "source": "1764245234403",
+      "target": "1764245238182"
+    },
+    {
+      "id": "e1764245224129-1764245283938",
+      "source": "1764245224129",
+      "target": "1764245283938"
+    },
+    {
+      "id": "e1764245283938-1764245460534",
+      "source": "1764245283938",
+      "target": "1764245460534"
+    },
+    {
+      "id": "e1764245460534-1764244585233-default",
+      "source": "1764245460534",
+      "target": "1764244585233"
+    }
+  ],
+  "steps": [
+    {
+      "id": "1",
+      "type": "navigate",
+      "description": "Navigate to URL",
+      "value": "https://testautomationpractice.blogspot.com/"
+    },
+    {
+      "id": "1764244463197",
+      "type": "wait",
+      "description": "Wait step",
+      "value": "2"
+    },
+    {
+      "id": "1764244573117",
+      "type": "setVariable",
+      "description": "Set Variable step",
+      "variableName": "indexVal",
+      "value": "1"
+    },
+    {
+      "id": "1764244673397",
+      "type": "click",
+      "description": "Click step",
+      "selector": "html > body > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div > div:nth-of-type(5) > div > div > table > tbody > tr:nth-of-type({{indexVal}}) > td:nth-of-type(4) > input"
+    },
+    {
+      "id": "1764244756319",
+      "type": "wait",
+      "description": "Wait step",
+      "value": "1"
+    },
+    {
+      "id": "1764244792448",
+      "type": "modifyVariable",
+      "description": "Modify Variable step",
+      "variableName": "indexVal",
+      "operation": "increment",
+      "value": "1"
+    },
+    {
+      "id": "1764244860702",
+      "type": "wait",
+      "description": "Wait step",
+      "value": "1"
+    },
+    {
+      "id": "1764245092610",
+      "type": "setVariable",
+      "description": "Set Variable step",
+      "variableName": "pageVal",
+      "value": "2"
+    },
+    {
+      "id": "1764245205490",
+      "type": "click",
+      "description": "Click step",
+      "selector": "html > body > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div > div:nth-of-type(5) > div > div > ul > li:nth-of-type({{pageVal}}) > a"
+    },
+    {
+      "id": "1764245224129",
+      "type": "wait",
+      "description": "Wait step",
+      "value": "1"
+    },
+    {
+      "id": "1764245234403",
+      "type": "wait",
+      "description": "Wait step",
+      "value": "1"
+    },
+    {
+      "id": "1764245238182",
+      "type": "screenshot",
+      "description": "Screenshot step",
+      "savePath": ""
+    },
+    {
+      "id": "1764245283938",
+      "type": "modifyVariable",
+      "description": "Modify Variable step",
+      "variableName": "pageVal",
+      "operation": "increment",
+      "value": "1"
+    },
+    {
+      "id": "1764245460534",
+      "type": "modifyVariable",
+      "description": "Modify Variable step",
+      "variableName": "indexVal",
+      "operation": "set",
+      "value": "1"
+    }
+  ]
+}

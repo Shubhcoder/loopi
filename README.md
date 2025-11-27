@@ -183,6 +183,23 @@ npm start              # Start Electron app with hot reload
 ```bash
 npm run make           # Package for current platform
 npm run publish        # Build and publish (requires config)
+
+## Examples
+
+Example automation JSON files are included under `docs/examples/` to help you test common scenarios quickly.
+
+- `docs/examples/pagination.json` — clicks the "Next" button on a listing page repeatedly until no next page is available and extracts titles.
+- `docs/examples/variable_loop.json` — demonstrates initializing an `index` variable with `Set Variable`, extracting a row by `{{index}}`, and incrementing the index with `Modify Variable` to loop.
+- `docs/examples/price_extraction.json` — extracts a price string, strips currency symbols and non-numeric characters, parses it as a number, and compares against a threshold (e.g. $50).
+
+How to use an example:
+
+1. Open the Automation Builder and choose _Import_ (or place the JSON into the import dialog).
+2. Select one of the files under `docs/examples/` and import it into the editor.
+3. Inspect nodes to see `Set Variable` / `Modify Variable` usage and condition transforms (e.g. `stripCurrency`, `parseAsNumber`).
+4. Run the automation from the builder using the Run button. The executor will initialize variables and execute steps in the browser window.
+
+Tip: Use the `Condition` node's "Post-process Extracted Text" options for robust comparisons when dealing with currency or noisy text.
 ```
 
 ## 📝 Adding a New Step Type
