@@ -2,20 +2,39 @@ import type { ForgeConfig } from "@electron-forge/shared-types";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
-import { MakerRpm } from "@electron-forge/maker-rpm";
 import { WebpackPlugin } from "@electron-forge/plugin-webpack";
 
 import { mainConfig } from "./webpack.main.config";
 import { rendererConfig } from "./webpack.renderer.config";
 
 const config: ForgeConfig = {
-  packagerConfig: {},
+  packagerConfig: {
+    icon: "assets/logo", // no extension
+  },
+
   rebuildConfig: {},
+
   makers: [
-    new MakerSquirrel({}, ["win32"]),
+    // Windows
+    new MakerSquirrel({
+      name: "automa",
+    }, ["win32"]),
+
+    // macOS ZIP
     new MakerZIP({}, ["darwin"]),
-    new MakerDeb({}, ["linux"]),
+
+    // Linux .deb
+    new MakerDeb(
+      {
+        options: {
+          icon: "assets/logo.png",
+          maintainer: "automa",
+        },
+      },
+      ["linux"]
+    ),
   ],
+
   plugins: [
     new WebpackPlugin({
       mainConfig,

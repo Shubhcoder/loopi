@@ -11,7 +11,8 @@ import { registerIPCHandlers } from "./ipcHandlers";
 
 // Fix for Linux sandbox issues
 if (process.platform === "linux") {
-  app.commandLine.appendSwitch("--no-sandbox");
+    app.commandLine.appendSwitch("no-sandbox");
+    app.commandLine.appendSwitch("disable-gpu");
 }
 
 // Handle auto-update installation on Windows

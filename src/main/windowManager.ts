@@ -22,6 +22,7 @@ export class WindowManager {
         contextIsolation: true,
         webviewTag: true,
       },
+      icon: "assets/logo.png",
     });
 
     this.mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
@@ -50,6 +51,7 @@ export class WindowManager {
         contextIsolation: true,
         nodeIntegration: false,
       },
+      icon: "assets/logo.png",
     });
 
     await this.browserWindow.loadURL(url);
