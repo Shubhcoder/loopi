@@ -1,15 +1,15 @@
-import * as ReactDOM from "react-dom/client";
-import { useState } from "react";
-import { Dashboard } from "./components/Dashboard";
-import { AutomationBuilder } from "./components/AutomationBuilder";
-import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Bot, Grid } from "lucide-react";
+import { useState } from "react";
+import * as ReactDOM from "react-dom/client";
+import { AutomationBuilder } from "./components/AutomationBuilder";
+import { Dashboard } from "./components/Dashboard";
+import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Automation } from "./types";
 import "./index.css";
 
 /**
  * App - Root application component
- * 
+ *
  * Manages:
  * - View routing (Dashboard, Builder, Credentials)
  * - Global automation state
@@ -17,12 +17,9 @@ import "./index.css";
  * - Create/Edit/Save automation workflows
  */
 export default function App() {
-  const [currentView, setCurrentView] = useState<
-    "dashboard" | "builder"
-  >("dashboard");
+  const [currentView, setCurrentView] = useState<"dashboard" | "builder">("dashboard");
   const [automations, setAutomations] = useState<Automation[]>([]);
-  const [selectedAutomation, setSelectedAutomation] =
-    useState<Automation | null>(null);
+  const [selectedAutomation, setSelectedAutomation] = useState<Automation | null>(null);
 
   const handleCreateAutomation = () => {
     setSelectedAutomation(null);
@@ -37,9 +34,7 @@ export default function App() {
   const handleSaveAutomation = (automation: Automation) => {
     if (selectedAutomation) {
       // Update existing automation
-      setAutomations((prev) =>
-        prev.map((a) => (a.id === automation.id ? automation : a))
-      );
+      setAutomations((prev) => prev.map((a) => (a.id === automation.id ? automation : a)));
     } else {
       // Add new automation
       setAutomations((prev) => [...prev, automation]);
@@ -59,10 +54,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Tabs
-              value={currentView}
-              onValueChange={(value) => setCurrentView(value as any)}
-            >
+            <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as any)}>
               <TabsList>
                 <TabsTrigger value="dashboard">
                   <Grid className="h-4 w-4 mr-1" />

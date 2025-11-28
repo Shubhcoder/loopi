@@ -7,7 +7,7 @@ import { SelectorButton } from "./customComponents";
 
 /**
  * ConditionEditor - Configuration UI for conditional nodes
- * 
+ *
  * Supports three condition types:
  * - elementExists: Check if element is present in DOM
  * - valueMatches: Compare element text content against expected value
@@ -27,7 +27,10 @@ export default function ConditionEditor({
     <>
       <div className="space-y-2">
         <Label className="text-xs">Condition Type</Label>
-        <Select value={data.conditionType || "elementExists"} onValueChange={(value) => onUpdate(id, "update", { conditionType: value })}>
+        <Select
+          value={data.conditionType || "elementExists"}
+          onValueChange={(value) => onUpdate(id, "update", { conditionType: value })}
+        >
           <SelectTrigger className="text-xs">
             <SelectValue />
           </SelectTrigger>
@@ -37,8 +40,8 @@ export default function ConditionEditor({
           </SelectContent>
         </Select>
       </div>
-      
-      {(["elementExists", "valueMatches"].includes(data.conditionType || "")) && (
+
+      {["elementExists", "valueMatches"].includes(data.conditionType || "") && (
         <div className="space-y-2">
           <Label className="text-xs">CSS Selector</Label>
           <div className="flex gap-2">
@@ -48,7 +51,11 @@ export default function ConditionEditor({
               placeholder="CSS Selector"
               className="text-xs flex-1"
             />
-            <SelectorButton onPick={async () => onPickWithSetter((selector) => onUpdate(id, "update", { selector }))} />
+            <SelectorButton
+              onPick={async () =>
+                onPickWithSetter((selector) => onUpdate(id, "update", { selector }))
+              }
+            />
           </div>
         </div>
       )}
@@ -57,7 +64,10 @@ export default function ConditionEditor({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs">Condition</Label>
-            <Select value={data.condition || "equals"} onValueChange={(value) => onUpdate(id, "update", { condition: value })}>
+            <Select
+              value={data.condition || "equals"}
+              onValueChange={(value) => onUpdate(id, "update", { condition: value })}
+            >
               <SelectTrigger className="text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -71,11 +81,19 @@ export default function ConditionEditor({
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Expected Value</Label>
-            <Input value={data.expectedValue || ""} onChange={(e) => onUpdate(id, "update", { expectedValue: e.target.value })} placeholder="Expected value" className="text-xs" />
+            <Input
+              value={data.expectedValue || ""}
+              onChange={(e) => onUpdate(id, "update", { expectedValue: e.target.value })}
+              placeholder="Expected value"
+              className="text-xs"
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Post-process Extracted Text</Label>
-            <Select value={data.transformType || "none"} onValueChange={(value) => onUpdate(id, "update", { transformType: value })}>
+            <Select
+              value={data.transformType || "none"}
+              onValueChange={(value) => onUpdate(id, "update", { transformType: value })}
+            >
               <SelectTrigger className="text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -91,21 +109,39 @@ export default function ConditionEditor({
             {data.transformType === "removeChars" && (
               <div className="mt-2">
                 <Label className="text-[11px]">Chars to remove</Label>
-                <Input value={data.transformChars || ""} onChange={(e) => onUpdate(id, "update", { transformChars: e.target.value })} placeholder="e.g. $ ," className="text-xs" />
+                <Input
+                  value={data.transformChars || ""}
+                  onChange={(e) => onUpdate(id, "update", { transformChars: e.target.value })}
+                  placeholder="e.g. $ ,"
+                  className="text-xs"
+                />
               </div>
             )}
 
             {data.transformType === "regexReplace" && (
               <div className="mt-2 space-y-2">
                 <Label className="text-[11px]">Regex pattern</Label>
-                <Input value={data.transformPattern || ""} onChange={(e) => onUpdate(id, "update", { transformPattern: e.target.value })} placeholder="e.g. ([^0-9.])" className="text-xs" />
+                <Input
+                  value={data.transformPattern || ""}
+                  onChange={(e) => onUpdate(id, "update", { transformPattern: e.target.value })}
+                  placeholder="e.g. ([^0-9.])"
+                  className="text-xs"
+                />
                 <Label className="text-[11px]">Replacement</Label>
-                <Input value={data.transformReplace || ""} onChange={(e) => onUpdate(id, "update", { transformReplace: e.target.value })} placeholder="e.g. ''" className="text-xs" />
+                <Input
+                  value={data.transformReplace || ""}
+                  onChange={(e) => onUpdate(id, "update", { transformReplace: e.target.value })}
+                  placeholder="e.g. ''"
+                  className="text-xs"
+                />
               </div>
             )}
 
             <div className="flex items-center gap-2 mt-2">
-              <Switch checked={!!data.parseAsNumber} onCheckedChange={(v: boolean) => onUpdate(id, "update", { parseAsNumber: v })} />
+              <Switch
+                checked={!!data.parseAsNumber}
+                onCheckedChange={(v: boolean) => onUpdate(id, "update", { parseAsNumber: v })}
+              />
               <Label className="text-xs">Parse as number before comparison</Label>
             </div>
           </div>

@@ -1,8 +1,8 @@
 import { app, BrowserWindow } from "electron";
-import { WindowManager } from "./windowManager";
 import { AutomationExecutor } from "./automationExecutor";
-import { SelectorPicker } from "./selectorPicker";
 import { registerIPCHandlers } from "./ipcHandlers";
+import { SelectorPicker } from "./selectorPicker";
+import { WindowManager } from "./windowManager";
 
 /**
  * Main process entry point
@@ -11,8 +11,8 @@ import { registerIPCHandlers } from "./ipcHandlers";
 
 // Fix for Linux sandbox issues
 if (process.platform === "linux") {
-    app.commandLine.appendSwitch("no-sandbox");
-    app.commandLine.appendSwitch("disable-gpu");
+  app.commandLine.appendSwitch("no-sandbox");
+  app.commandLine.appendSwitch("disable-gpu");
 }
 
 // Handle auto-update installation on Windows

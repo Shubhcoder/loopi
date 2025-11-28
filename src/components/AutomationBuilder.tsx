@@ -1,26 +1,21 @@
-import { useState, useEffect, useCallback } from "react";
-import {
-  useNodesState,
-  useEdgesState,
-  OnSelectionChangeParams,
-} from "reactflow";
+import { useCallback, useEffect, useState } from "react";
+import { OnSelectionChangeParams, useEdgesState, useNodesState } from "reactflow";
 import "reactflow/dist/style.css";
+import useExecution from "../hooks/useExecution";
+import useNodeActions from "../hooks/useNodeActions";
 import type {
   Automation,
   AutomationStep,
-  Node,
   Edge,
-  NodeData,
   EdgeData,
-  ReactFlowNode,
+  Node,
+  NodeData,
   ReactFlowEdge,
+  ReactFlowNode,
 } from "../types";
-
 import AutomationNode from "./automationBuilder/AutomationNode";
-import BuilderHeader from "./automationBuilder/BuilderHeader";
 import BuilderCanvas from "./automationBuilder/BuilderCanvas";
-import useNodeActions from "../hooks/useNodeActions";
-import useExecution from "../hooks/useExecution";
+import BuilderHeader from "./automationBuilder/BuilderHeader";
 
 const nodeTypes = {
   automationStep: AutomationNode,
@@ -35,7 +30,7 @@ interface AutomationBuilderProps {
 
 /**
  * AutomationBuilder - Main visual editor for creating and managing browser automations
- * 
+ *
  * Features:
  * - Drag-and-drop node graph editor using ReactFlow
  * - Real-time automation testing in browser window
@@ -43,11 +38,7 @@ interface AutomationBuilderProps {
  * - Import/export automation workflows
  * - Schedule configuration (manual, interval, fixed time)
  */
-export function AutomationBuilder({
-  automation,
-  onSave,
-  onCancel,
-}: AutomationBuilderProps) {
+export function AutomationBuilder({ automation, onSave, onCancel }: AutomationBuilderProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>([]);
@@ -94,13 +85,13 @@ export function AutomationBuilder({
   // Keyboard shortcut: Delete/Backspace removes selected edges
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEdgeIds.length > 0) {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedEdgeIds.length > 0) {
         e.preventDefault();
         handleDeleteSelectedEdges();
       }
     };
-    window.addEventListener('keydown', keyHandler);
-    return () => window.removeEventListener('keydown', keyHandler);
+    window.addEventListener("keydown", keyHandler);
+    return () => window.removeEventListener("keydown", keyHandler);
   }, [selectedEdgeIds, handleDeleteSelectedEdges]);
 
   useEffect(() => {
@@ -194,8 +185,8 @@ export function AutomationBuilder({
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
-  const currentAutomationForExport: Automation | undefined = name.trim() 
-    ? serializeAutomation() 
+  const currentAutomationForExport: Automation | undefined = name.trim()
+    ? serializeAutomation()
     : undefined;
 
   return (

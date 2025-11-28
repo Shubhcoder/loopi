@@ -10,12 +10,14 @@ export function SetVariableStep({ step, id, onUpdate }: StepProps) {
         <Input
           value={step.variableName || ""}
           placeholder="e.g. productTitle"
-          onChange={(e) => onUpdate(id, "update", { step: { ...step, variableName: e.target.value } })}
+          onChange={(e) =>
+            onUpdate(id, "update", { step: { ...step, variableName: e.target.value } })
+          }
           className="text-xs"
         />
       </div>
       <div className="space-y-2">
-        <Label className="text-xs">Value (supports {'{{otherVar}}'} references)</Label>
+        <Label className="text-xs">Value (supports {"{{otherVar}}"} references)</Label>
         <Input
           value={step.value || ""}
           placeholder="Use static text or {{otherVar}}"

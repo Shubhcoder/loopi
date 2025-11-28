@@ -12,10 +12,18 @@ export function TypeStep({ step, id, onUpdate, onPickWithSetter }: StepProps) {
           <Input
             value={step.selector || ""}
             placeholder="CSS Selector"
-            onChange={(e) => onUpdate(id, "update", { step: { ...step, selector: e.target.value } })}
+            onChange={(e) =>
+              onUpdate(id, "update", { step: { ...step, selector: e.target.value } })
+            }
             className="text-xs flex-1"
           />
-          <SelectorButton onPick={async () => onPickWithSetter((selector) => onUpdate(id, "update", { step: { ...step, selector } }))} />
+          <SelectorButton
+            onPick={async () =>
+              onPickWithSetter((selector) =>
+                onUpdate(id, "update", { step: { ...step, selector } })
+              )
+            }
+          />
         </div>
       </div>
 

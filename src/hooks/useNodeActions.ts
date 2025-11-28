@@ -2,12 +2,12 @@ import { useCallback } from "react";
 import { addEdge, Connection } from "reactflow";
 import type {
   AutomationStep,
-  Node,
   Edge,
-  NodeData,
   EdgeData,
-  ReactFlowNode,
+  Node,
+  NodeData,
   ReactFlowEdge,
+  ReactFlowNode,
 } from "../types";
 import { stepTypes } from "../types";
 
@@ -21,13 +21,13 @@ interface UseNodeActionsArgs {
 
 /**
  * useNodeActions - Manages node and edge operations in the automation builder
- * 
+ *
  * Provides:
  * - Node creation with type-specific initial values
  * - Node updates and deletion
  * - Edge creation with validation (conditional branching constraints)
  * - Automatic edge routing based on node type
- * 
+ *
  * Constraints enforced:
  * - Regular nodes: max 1 outgoing edge
  * - Conditional nodes: max 2 outgoing edges ("if" and "else" branches)
@@ -53,21 +53,15 @@ export default function useNodeActions({
         | undefined;
 
       if (sourceNode.type !== "conditional") {
-        const outgoing = edges.filter(
-          (e) => e.source === params.source && !e.sourceHandle
-        ).length;
+        const outgoing = edges.filter((e) => e.source === params.source && !e.sourceHandle).length;
         if (outgoing >= 1) {
-          alert(
-            "Cannot add more than one outgoing edge to a non-conditional node"
-          );
+          alert("Cannot add more than one outgoing edge to a non-conditional node");
           return null;
         }
         sourceHandle = undefined;
       } else {
         if (sourceHandle === "if") {
-          const existing = edges.find(
-            (e) => e.source === params.source && e.sourceHandle === "if"
-          );
+          const existing = edges.find((e) => e.source === params.source && e.sourceHandle === "if");
           if (existing) {
             alert("The 'if' branch is already connected");
             return null;
@@ -122,9 +116,7 @@ export default function useNodeActions({
           return nds.filter((node) => node.id !== sourceId);
         });
         setEdges((eds: ReactFlowEdge[]) =>
-          eds.filter(
-            (edge) => edge.source !== sourceId && edge.target !== sourceId
-          )
+          eds.filter((edge) => edge.source !== sourceId && edge.target !== sourceId)
         );
         setSelectedNodeId(null);
         return;
@@ -159,9 +151,7 @@ export default function useNodeActions({
             setEdges((edgesInner: ReactFlowEdge[]) => {
               const outgoingEdges = edgesInner.filter((e) => e.source === sourceId);
               if (outgoingEdges.length >= 2) {
-                alert(
-                  "Cannot add more than two outgoing edges from a conditional node."
-                );
+                alert("Cannot add more than two outgoing edges from a conditional node.");
                 maxOutgoing = true;
                 return edgesInner;
               }
@@ -175,9 +165,7 @@ export default function useNodeActions({
                 (e) => e.source === sourceId && !e.sourceHandle
               ).length;
               if (outgoingCount >= 1) {
-                alert(
-                  "Cannot add more than one outgoing edge from a non-conditional node."
-                );
+                alert("Cannot add more than one outgoing edge from a non-conditional node.");
                 maxOutgoing = true;
                 return edgesInner;
               }
@@ -200,7 +188,7 @@ export default function useNodeActions({
                 }
               : {
                   step: (() => {
-                    const label = stepTypes.find((s) => s.value === type as any)?.label || "Step";
+                    const label = stepTypes.find((s) => s.value === (type as any))?.label || "Step";
                     switch (type) {
                       case "navigate":
                         return {
@@ -326,9 +314,7 @@ export default function useNodeActions({
                 },
           position: {
             x: sourceNode ? sourceNode.position.x : 250,
-            y: sourceNode
-              ? sourceNode.position.y + 100
-              : currentNodes.length * 150 + 50,
+            y: sourceNode ? sourceNode.position.y + 100 : currentNodes.length * 150 + 50,
           },
         };
 
@@ -369,7 +355,10 @@ export default function useNodeActions({
               if (outgoingCount >= 1) {
                 return currentEdges;
               }
-              return addEdge({ id: `e${sourceId}-${newId}`, source: sourceId, target: newId }, currentEdges);
+              return addEdge(
+                { id: `e${sourceId}-${newId}`, source: sourceId, target: newId },
+                currentEdges
+              );
             });
           }
 

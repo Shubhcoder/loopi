@@ -1,21 +1,21 @@
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import {
-  NavigateStep,
   ClickStep,
-  TypeStep,
-  SelectOptionStep,
   ExtractWithLogicStep,
-  ScrollStep,
-  WaitStep,
+  ModifyVariableStep,
+  NavigateStep,
   ScreenshotStep,
+  ScrollStep,
+  SelectOptionStep,
+  SetVariableStep,
+  TypeStep,
+  WaitStep,
 } from "./stepTypes";
-import { ModifyVariableStep } from "./stepTypes";
-import { SetVariableStep } from "./stepTypes";
 
 /**
  * StepEditor - Dynamic editor for automation step configuration
- * 
+ *
  * Routes to appropriate step-specific editor based on step type.
  * Each step type has its own component with custom fields and validation.
  */
@@ -36,19 +36,39 @@ export default function StepEditor({
       case "navigate":
         return <NavigateStep step={step} id={id} onUpdate={onUpdate} />;
       case "click":
-        return <ClickStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />;
+        return (
+          <ClickStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />
+        );
       case "type":
-        return <TypeStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />;
+        return (
+          <TypeStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />
+        );
       case "selectOption":
-        return <SelectOptionStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />;
+        return (
+          <SelectOptionStep
+            step={step}
+            id={id}
+            onUpdate={onUpdate}
+            onPickWithSetter={onPickWithSetter}
+          />
+        );
       case "extractWithLogic":
-        return <ExtractWithLogicStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />;
+        return (
+          <ExtractWithLogicStep
+            step={step}
+            id={id}
+            onUpdate={onUpdate}
+            onPickWithSetter={onPickWithSetter}
+          />
+        );
       case "wait":
         return <WaitStep step={step} id={id} onUpdate={onUpdate} />;
       case "screenshot":
         return <ScreenshotStep step={step} id={id} onUpdate={onUpdate} />;
       case "scroll":
-        return <ScrollStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />;
+        return (
+          <ScrollStep step={step} id={id} onUpdate={onUpdate} onPickWithSetter={onPickWithSetter} />
+        );
       case "modifyVariable":
         return <ModifyVariableStep step={step} id={id} onUpdate={onUpdate} />;
       case "setVariable":
@@ -64,7 +84,9 @@ export default function StepEditor({
         <Label className="text-xs">Description</Label>
         <Input
           value={step.description || ""}
-          onChange={(e) => onUpdate(id, "update", { step: { ...step, description: e.target.value } })}
+          onChange={(e) =>
+            onUpdate(id, "update", { step: { ...step, description: e.target.value } })
+          }
           className="text-xs"
           placeholder="Step description"
         />

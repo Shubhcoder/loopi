@@ -1,5 +1,5 @@
-import { BrowserWindow } from "electron";
 import axios from "axios";
+import { BrowserWindow } from "electron";
 
 /**
  * Handles execution of automation steps in the browser window
@@ -80,10 +80,7 @@ export class AutomationExecutor {
 
       case "screenshot": {
         const img = await wc.capturePage();
-        const timestamp = new Date()
-          .toISOString()
-          .replace(/[-:.]/g, "")
-          .slice(0, 15);
+        const timestamp = new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15);
         const savePath = step.savePath || `screenshot_${timestamp}.png`;
         await require("fs").promises.writeFile(savePath, img.toPNG());
         return img.toPNG().toString("base64");
@@ -118,12 +115,10 @@ export class AutomationExecutor {
             conditionMet = extractedValue.includes(step.expectedValue);
             break;
           case "greaterThan":
-            conditionMet =
-              parseFloat(extractedValue) > parseFloat(step.expectedValue);
+            conditionMet = parseFloat(extractedValue) > parseFloat(step.expectedValue);
             break;
           case "lessThan":
-            conditionMet =
-              parseFloat(extractedValue) < parseFloat(step.expectedValue);
+            conditionMet = parseFloat(extractedValue) < parseFloat(step.expectedValue);
             break;
         }
 
@@ -153,7 +148,8 @@ export class AutomationExecutor {
           const dataOut = response.data;
           if (step.storeKey) {
             try {
-              this.variables[step.storeKey] = typeof dataOut === "string" ? dataOut : JSON.stringify(dataOut);
+              this.variables[step.storeKey] =
+                typeof dataOut === "string" ? dataOut : JSON.stringify(dataOut);
             } catch (e) {
               this.variables[step.storeKey] = String(dataOut);
             }
@@ -297,7 +293,7 @@ export class AutomationExecutor {
       if (t === "stripCurrency") {
         s = s.replace(/[$€£,\s]/g, "");
       } else if (t === "stripNonNumeric") {
-        s = s.replace(/[^0-9.\-]/g, "");
+        s = s.replace(/[^0-9.-]/g, "");
       } else if (t === "removeChars" && config.transformChars) {
         const chars = config.transformChars.split("");
         for (const c of chars) s = s.split(c).join("");
@@ -315,28 +311,39 @@ export class AutomationExecutor {
     let conditionResult = false;
 
     if (conditionType === "elementExists") {
-      conditionResult = await wc.executeJavaScript(`!!document.querySelector(${JSON.stringify(runtimeSelector)});`);
+      conditionResult = await wc.executeJavaScript(
+        `!!document.querySelector(${JSON.stringify(runtimeSelector)});`
+      );
     } else if (conditionType === "valueMatches") {
-      const rawValue: string = await wc.executeJavaScript(`document.querySelector(${JSON.stringify(runtimeSelector)})?.innerText || "";`);
+      const rawValue: string = await wc.executeJavaScript(
+        `document.querySelector(${JSON.stringify(runtimeSelector)})?.innerText || "";`
+      );
       const transformed = applyTransform(rawValue);
       const expected = expectedValue || "";
       const op = config.condition || "equals";
 
       if (config.parseAsNumber) {
-      const a = parseFloat(transformed.replace(/[^0-9.\-]/g, ""));
-      const b = parseFloat(expected.replace(/[^0-9.\-]/g, ""));
-      conditionResult = !isNaN(a) && !isNaN(b) && (
-        op === "greaterThan" ? a > b :
-        op === "lessThan" ? a < b :
-        op === "contains" ? transformed.includes(expected) :
-        a === b
-      );
+        const a = parseFloat(transformed.replace(/[^0-9.-]/g, ""));
+        const b = parseFloat(expected.replace(/[^0-9.-]/g, ""));
+        conditionResult =
+          !isNaN(a) &&
+          !isNaN(b) &&
+          (op === "greaterThan"
+            ? a > b
+            : op === "lessThan"
+              ? a < b
+              : op === "contains"
+                ? transformed.includes(expected)
+                : a === b);
       } else {
-      conditionResult = 
-        op === "contains" ? transformed.includes(expected) :
-        op === "greaterThan" ? parseFloat(transformed) > parseFloat(expected) :
-        op === "lessThan" ? parseFloat(transformed) < parseFloat(expected) :
-        transformed === expected;
+        conditionResult =
+          op === "contains"
+            ? transformed.includes(expected)
+            : op === "greaterThan"
+              ? parseFloat(transformed) > parseFloat(expected)
+              : op === "lessThan"
+                ? parseFloat(transformed) < parseFloat(expected)
+                : transformed === expected;
       }
     }
 

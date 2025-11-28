@@ -37,9 +37,7 @@ export class SelectorPicker {
         bar.append(input, btn);
         document.body.prepend(bar);
       `;
-      browserWindow.webContents
-        .executeJavaScript(navigationBarScript)
-        .catch(console.error);
+      browserWindow.webContents.executeJavaScript(navigationBarScript).catch(console.error);
     });
   }
 
@@ -123,9 +121,7 @@ export class SelectorPicker {
    * Injects the interactive selector picker UI into the page
    * Users can hover to highlight elements and click to select them
    */
-  private async injectPickerScript(
-    browserWindow: BrowserWindow
-  ): Promise<void> {
+  private async injectPickerScript(browserWindow: BrowserWindow): Promise<void> {
     const pickerScript = `
       (function() {
         try {

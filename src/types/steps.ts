@@ -1,4 +1,4 @@
-import { Globe, Mouse, Type as TypeIcon, Clock, Camera } from "lucide-react";
+import { Camera, Clock, Globe, Mouse, Type as TypeIcon } from "lucide-react";
 
 /**
  * Automation Step Type System
@@ -128,10 +128,30 @@ export const stepTypes = [
   { value: "navigate", label: "Navigate", icon: Globe, description: "Go to a URL" },
   { value: "click", label: "Click", icon: Mouse, description: "Click an element" },
   { value: "type", label: "Type", icon: TypeIcon, description: "Enter text" },
-  { value: "selectOption", label: "Select Option", icon: TypeIcon, description: "Select an option from a dropdown" },
+  {
+    value: "selectOption",
+    label: "Select Option",
+    icon: TypeIcon,
+    description: "Select an option from a dropdown",
+  },
   { value: "wait", label: "Wait", icon: Clock, description: "Wait for a duration" },
   { value: "screenshot", label: "Screenshot", icon: Camera, description: "Take a screenshot" },
-  { value: "scroll", label: "Scroll", icon: Mouse, description: "Scroll the page or to an element" },
-  { value: "setVariable", label: "Set Variable", icon: TypeIcon, description: "Define or update a variable" },
-  { value: "modifyVariable", label: "Modify Variable", icon: TypeIcon, description: "Increment / decrement / edit a variable" },
+  {
+    value: "scroll",
+    label: "Scroll",
+    icon: Mouse,
+    description: "Scroll the page or to an element",
+  },
+  {
+    value: "setVariable",
+    label: "Set Variable",
+    icon: TypeIcon,
+    description: "Define or update a variable",
+  },
+  {
+    value: "modifyVariable",
+    label: "Modify Variable",
+    icon: TypeIcon,
+    description: "Increment / decrement / edit a variable",
+  },
 ] as const;

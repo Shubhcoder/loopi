@@ -1,12 +1,12 @@
-import { ReactFlowNode, Node } from "../../../types";
+import { Node, ReactFlowNode } from "../../../types";
 import { Card, CardContent, CardHeader } from "../../ui/card";
+import ConditionEditor from "./ConditionEditor";
 import NodeHeader from "./NodeHeader";
 import StepEditor from "./StepEditor";
-import ConditionEditor from "./ConditionEditor";
 
 /**
  * NodeDetails - Displays and manages properties for automation steps and conditional nodes
- * 
+ *
  * Provides a detail panel for editing node properties, including:
  * - Step configuration (URL, selectors, values, etc.)
  * - Conditional logic settings
@@ -19,11 +19,7 @@ export default function NodeDetails({
   recentUrl,
 }: {
   node: ReactFlowNode;
-  onUpdate: (
-    sourceId: string,
-    type: "update" | "delete",
-    updates?: Partial<Node["data"]>
-  ) => void;
+  onUpdate: (sourceId: string, type: "update" | "delete", updates?: Partial<Node["data"]>) => void;
   setBrowserOpen: (arg?: boolean | string) => void;
   recentUrl: string;
 }) {
@@ -38,11 +34,11 @@ export default function NodeDetails({
       alert("Electron API not available. Ensure the browser is set up.");
       return;
     }
-    
+
     try {
       const urlToOpen = recentUrl || "https://";
       const selector = await (window as any).electronAPI.pickSelector(urlToOpen);
-      
+
       if (selector) {
         // Parse select element data: "selector||optionIndex||optionValue"
         if (data.step?.type === "selectOption") {
@@ -60,7 +56,7 @@ export default function NodeDetails({
           setter(selector);
         }
       }
-      
+
       (window as any).electronAPI.focusMainWindow?.();
     } catch (err: any) {
       console.error("Selector pick failed:", err);
@@ -71,7 +67,11 @@ export default function NodeDetails({
   return (
     <Card className="w-80 max-h-[80vh] overflow-y-auto">
       <CardHeader className="p-3">
-        <NodeHeader title={data.step ? data.step.type : "Conditional"} id={id} onDelete={(nodeId) => onUpdate(nodeId, "delete")} />
+        <NodeHeader
+          title={data.step ? data.step.type : "Conditional"}
+          id={id}
+          onDelete={(nodeId) => onUpdate(nodeId, "delete")}
+        />
       </CardHeader>
       <CardContent className="p-3 space-y-4">
         {data.step ? (

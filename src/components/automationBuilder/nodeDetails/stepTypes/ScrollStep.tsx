@@ -32,10 +32,19 @@ export function ScrollStep({ step, id, onUpdate, onPickWithSetter }: StepProps) 
             <Input
               value={step.selector || ""}
               placeholder="CSS Selector"
-              onChange={(e) => onUpdate(id, "update", { step: { ...step, selector: e.target.value } })}
+              onChange={(e) =>
+                onUpdate(id, "update", { step: { ...step, selector: e.target.value } })
+              }
               className="text-xs flex-1"
             />
-            <SelectorButton onPick={async () => onPickWithSetter && onPickWithSetter((selector) => onUpdate(id, "update", { step: { ...step, selector } }))} />
+            <SelectorButton
+              onPick={async () =>
+                onPickWithSetter &&
+                onPickWithSetter((selector) =>
+                  onUpdate(id, "update", { step: { ...step, selector } })
+                )
+              }
+            />
           </div>
         </div>
       )}
@@ -46,7 +55,11 @@ export function ScrollStep({ step, id, onUpdate, onPickWithSetter }: StepProps) 
           <Input
             value={step.scrollAmount !== undefined ? String(step.scrollAmount) : ""}
             placeholder="e.g. 200"
-            onChange={(e) => onUpdate(id, "update", { step: { ...step, scrollAmount: parseInt(e.target.value || "0") } })}
+            onChange={(e) =>
+              onUpdate(id, "update", {
+                step: { ...step, scrollAmount: parseInt(e.target.value || "0") },
+              })
+            }
             className="text-xs"
           />
         </div>

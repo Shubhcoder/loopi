@@ -1,6 +1,5 @@
+import type { Edge, Node } from "./flow";
 import type { AutomationStep } from "./steps";
-import type { Node, Edge } from "./flow";
-
 
 export interface Automation {
   id: string;

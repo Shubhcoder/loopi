@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ReactFlowNode, ReactFlowEdge } from "../types";
+import type { ReactFlowEdge, ReactFlowNode } from "../types";
 
 interface UseExecutionArgs {
   nodes: ReactFlowNode[];
@@ -9,13 +9,13 @@ interface UseExecutionArgs {
 
 /**
  * useExecution - Manages browser automation execution state and graph traversal
- * 
+ *
  * Handles:
  * - Browser window lifecycle (open/close)
  * - Automation execution state (running/paused/stopped)
  * - Graph-based flow execution with conditional branching
  * - Node-by-node step execution with visual feedback
- * 
+ *
  * @param nodes - ReactFlow nodes representing automation steps
  * @param edges - ReactFlow edges defining execution order
  * @param setNodes - Function to update node state (for visual feedback)
@@ -76,7 +76,6 @@ export default function useExecution({ nodes, edges, setNodes }: UseExecutionArg
       if (node.type === "automationStep" && node.data.step) {
         return await (window as any).electronAPI.runStep(node.data.step);
       } else if (node.type === "conditional") {
-
         const conditionParams = {
           conditionType: node.data.conditionType,
           selector: node.data.selector,
@@ -89,10 +88,12 @@ export default function useExecution({ nodes, edges, setNodes }: UseExecutionArg
           parseAsNumber: node.data.parseAsNumber,
         };
 
-        const { conditionResult, effectiveSelector } = await (window as any).electronAPI.runConditional(conditionParams);
+        const { conditionResult, effectiveSelector } = await (
+          window as any
+        ).electronAPI.runConditional(conditionParams);
 
         return {
-          conditionResult
+          conditionResult,
         };
       }
     },
@@ -141,7 +142,9 @@ export default function useExecution({ nodes, edges, setNodes }: UseExecutionArg
 
         if (node.type === "conditional" && result?.conditionResult !== undefined) {
           const branch = result.conditionResult ? "if" : "else";
-          nextNodes = edges.filter((e) => e.source === nodeId && e.sourceHandle === branch).map((e) => e.target);
+          nextNodes = edges
+            .filter((e) => e.source === nodeId && e.sourceHandle === branch)
+            .map((e) => e.target);
         } else {
           nextNodes = edges.filter((e) => e.source === nodeId).map((e) => e.target);
         }

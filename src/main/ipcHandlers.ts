@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
-import { WindowManager } from "./windowManager";
 import { AutomationExecutor } from "./automationExecutor";
 import { SelectorPicker } from "./selectorPicker";
+import { WindowManager } from "./windowManager";
 
 /**
  * Registers all IPC handlers for communication between renderer and main process
@@ -44,10 +44,13 @@ export function registerIPCHandlers(
   /**
    * Initialize executor variable context from renderer
    */
-  ipcMain.handle("executor:initVariables", async (_event, vars: Record<string, string> | undefined) => {
-    executor.initVariables(vars);
-    return true;
-  });
+  ipcMain.handle(
+    "executor:initVariables",
+    async (_event, vars: Record<string, string> | undefined) => {
+      executor.initVariables(vars);
+      return true;
+    }
+  );
 
   /**
    * Return a copy of current executor variables

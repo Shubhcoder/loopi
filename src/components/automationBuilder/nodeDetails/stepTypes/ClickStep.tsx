@@ -14,7 +14,11 @@ export function ClickStep({ step, id, onUpdate, onPickWithSetter }: StepProps) {
           onChange={(e) => onUpdate(id, "update", { step: { ...step, selector: e.target.value } })}
           className="text-xs flex-1"
         />
-        <SelectorButton onPick={async () => onPickWithSetter((selector) => onUpdate(id, "update", { step: { ...step, selector } }))} />
+        <SelectorButton
+          onPick={async () =>
+            onPickWithSetter((selector) => onUpdate(id, "update", { step: { ...step, selector } }))
+          }
+        />
       </div>
     </div>
   );

@@ -1,18 +1,12 @@
+import { ArrowLeft, Download, Globe, Pause, Play, Save, Settings, Square } from "lucide-react";
 import React from "react";
+import type { Automation } from "../../types";
+import { exportAutomation } from "../../utils/automationIO";
 import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
-import { ArrowLeft, Save, Play, Globe, Pause, Square, Settings, Download } from "lucide-react";
-import { exportAutomation } from "../../utils/automationIO";
-import type { Automation } from "../../types";
 
 interface BuilderHeaderProps {
   name: string;
@@ -34,7 +28,7 @@ interface BuilderHeaderProps {
 
 /**
  * BuilderHeader - Top toolbar for automation builder
- * 
+ *
  * Provides:
  * - Navigation (back to dashboard)
  * - Automation metadata (name, description, schedule)
@@ -92,11 +86,20 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Automation Name</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter automation name" />
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter automation name"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Description</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe what this automation does" rows={3} />
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe what this automation does"
+                    rows={3}
+                  />
                 </div>
               </div>
             </DialogContent>

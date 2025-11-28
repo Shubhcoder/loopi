@@ -26,7 +26,7 @@ export class WindowManager {
     });
 
     this.mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-    
+
     return this.mainWindow;
   }
 
@@ -55,10 +55,10 @@ export class WindowManager {
     });
 
     await this.browserWindow.loadURL(url);
-    
+
     // Uncomment to debug picker script issues
     // this.browserWindow.webContents.openDevTools();
-    
+
     // Store reference to avoid closure issues
     const onClosedCallback = onClosed;
     this.browserWindow.on("closed", () => {

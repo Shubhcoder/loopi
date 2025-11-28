@@ -1,9 +1,9 @@
-import { Button } from "../../../ui/button";
 import { Target } from "lucide-react";
+import { Button } from "../../../ui/button";
 
 /**
  * SelectorButton - Trigger button for interactive element selector
- * 
+ *
  * Initiates the browser-based element picker when clicked.
  * Used in step configuration forms that require CSS selectors.
  */

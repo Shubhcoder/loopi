@@ -12,10 +12,18 @@ export function SelectOptionStep({ step, id, onUpdate, onPickWithSetter }: StepP
           <Input
             value={step.selector || ""}
             placeholder="CSS Selector"
-            onChange={(e) => onUpdate(id, "update", { step: { ...step, selector: e.target.value } })}
+            onChange={(e) =>
+              onUpdate(id, "update", { step: { ...step, selector: e.target.value } })
+            }
             className="text-xs flex-1"
           />
-          <SelectorButton onPick={async () => onPickWithSetter((selector) => onUpdate(id, "update", { step: { ...step, selector } }))} />
+          <SelectorButton
+            onPick={async () =>
+              onPickWithSetter((selector) =>
+                onUpdate(id, "update", { step: { ...step, selector } })
+              )
+            }
+          />
         </div>
       </div>
 
@@ -24,7 +32,9 @@ export function SelectOptionStep({ step, id, onUpdate, onPickWithSetter }: StepP
         <Input
           value={step.optionValue || ""}
           placeholder="Option value to select"
-          onChange={(e) => onUpdate(id, "update", { step: { ...step, optionValue: e.target.value } })}
+          onChange={(e) =>
+            onUpdate(id, "update", { step: { ...step, optionValue: e.target.value } })
+          }
           className="text-xs"
         />
       </div>
@@ -34,7 +44,9 @@ export function SelectOptionStep({ step, id, onUpdate, onPickWithSetter }: StepP
           type="number"
           value={step.optionIndex || ""}
           placeholder="Option index to select"
-          onChange={(e) => onUpdate(id, "update", { step: { ...step, optionIndex: Number(e.target.value) } })}
+          onChange={(e) =>
+            onUpdate(id, "update", { step: { ...step, optionIndex: Number(e.target.value) } })
+          }
           className="text-xs"
         />
       </div>

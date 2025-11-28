@@ -10,7 +10,9 @@ export function ModifyVariableStep({ step, id, onUpdate }: StepProps) {
         <Input
           value={step.variableName || ""}
           placeholder="variable name"
-          onChange={(e) => onUpdate(id, "update", { step: { ...step, variableName: e.target.value } })}
+          onChange={(e) =>
+            onUpdate(id, "update", { step: { ...step, variableName: e.target.value } })
+          }
           className="text-xs"
         />
       </div>
