@@ -21,6 +21,7 @@ export class WindowManager {
         preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
         contextIsolation: true,
         webviewTag: true,
+        sandbox: false,
       },
       icon: "assets/logo.png",
     });
@@ -50,6 +51,7 @@ export class WindowManager {
         preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
         contextIsolation: true,
         nodeIntegration: false,
+        sandbox: false,
       },
       icon: "assets/logo.png",
     });
