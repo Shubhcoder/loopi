@@ -7,11 +7,11 @@ export function ScreenshotStep({ step, id, onUpdate }: StepProps) {
 
   return (
     <div className="space-y-2">
-      <Label className="text-xs">Filename</Label>
+      <Label className="text-xs">Save Path</Label>
       <Input
         type="text"
         value={step.savePath || ""}
-        placeholder="filename"
+        placeholder="save/path/filename.png"
         onChange={(e) => onUpdate(id, "update", { step: { ...step, savePath: e.target.value } })}
         className="text-xs"
       />

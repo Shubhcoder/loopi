@@ -320,7 +320,7 @@ export class AutomationExecutor {
         `document.querySelector(${JSON.stringify(runtimeSelector)})?.innerText || "";`
       );
       const transformed = applyTransform(rawValue);
-      const expected = expectedValue || "";
+      const expected = this.substituteVariables(expectedValue || "");
       const op = config.condition || "equals";
 
       if (config.parseAsNumber) {

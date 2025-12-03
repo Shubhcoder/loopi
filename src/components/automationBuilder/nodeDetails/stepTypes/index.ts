@@ -1,4 +1,5 @@
 import { ClickStep } from "./ClickStep";
+import { ExtractStep } from "./ExtractStep";
 import { ExtractWithLogicStep } from "./ExtractWithLogicStep";
 import { ModifyVariableStep } from "./ModifyVariableStep";
 import { NavigateStep } from "./NavigateStep";
@@ -14,6 +15,7 @@ export {
   ClickStep,
   TypeStep,
   SelectOptionStep,
+  ExtractStep,
   ExtractWithLogicStep,
   WaitStep,
   ScreenshotStep,

@@ -9,6 +9,7 @@ import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import {
   ClickStep,
+  ExtractStep,
   ExtractWithLogicStep,
   ModifyVariableStep,
   NavigateStep,
@@ -51,6 +52,15 @@ export default function StepEditor({
       case "selectOption":
         return (
           <SelectOptionStep
+            step={step}
+            id={id}
+            onUpdate={onUpdate}
+            onPickWithSetter={onPickWithSetter}
+          />
+        );
+      case "extract":
+        return (
+          <ExtractStep
             step={step}
             id={id}
             onUpdate={onUpdate}

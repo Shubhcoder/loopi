@@ -242,6 +242,7 @@ export default function useNodeActions({
                           type: "extract" as const,
                           description: `${label} step`,
                           selector: "",
+                          storeKey: "",
                         };
                       case "extractWithLogic":
                         return {

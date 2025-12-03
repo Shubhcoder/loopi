@@ -137,6 +137,12 @@ export const stepTypes = [
   { value: "wait", label: "Wait", icon: Clock, description: "Wait for a duration" },
   { value: "screenshot", label: "Screenshot", icon: Camera, description: "Take a screenshot" },
   {
+    value: "extract",
+    label: "Extract",
+    icon: TypeIcon,
+    description: "Extract text and store in variable",
+  },
+  {
     value: "scroll",
     label: "Scroll",
     icon: Mouse,

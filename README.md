@@ -7,9 +7,10 @@ A powerful Electron-based desktop application for creating, managing, and execut
 - **Visual Workflow Editor**: Drag-and-drop node graph using ReactFlow
 - **Browser Automation**: Execute automation steps in real Chromium windows
 - **Interactive Element Picker**: Click-to-select CSS selectors from live pages
+- **Data Extraction**: Extract text from elements and store in variables for reuse
+- **Variable System**: Set, modify, and substitute variables using `{{varName}}` syntax
 - **Conditional Logic**: Branching flows; use condition nodes together with variables for explicit loop control
 - **Import/Export**: Save and share automation workflows as JSON
-- **Scheduling**: Manual, interval-based, or fixed-time execution
 - **TypeScript**: Fully typed codebase with discriminated unions for type safety
 
 ## 📦 Tech Stack
@@ -87,10 +88,13 @@ Robust type definitions with **discriminated unions** for type safety:
 ```typescript
 // Each step type is uniquely identified by its 'type' field
 type AutomationStep =
-  | StepNavigate    // { type: "navigate", value: string }
-  | StepClick       // { type: "click", selector: string }
-  | StepType        // { type: "type", selector: string, value: string, credentialId?: string }
-  | ... 10 more variants
+  | StepNavigate      // { type: "navigate", value: string }
+  | StepClick         // { type: "click", selector: string }
+  | StepType          // { type: "type", selector: string, value: string, credentialId?: string }
+  | StepExtract       // { type: "extract", selector: string, storeKey?: string }
+  | StepSetVariable   // { type: "setVariable", variableName: string, value: string }
+  | StepModifyVariable// { type: "modifyVariable", variableName: string, operation: ModifyOp, value: string }
+  | ... more variants
 
 // TypeScript narrows types automatically:
 switch (step.type) {
@@ -220,26 +224,44 @@ export type AutomationStep =
   | StepClick
   | ...
   | StepCustom;  // Add to union
+
+// Add to UI metadata
+export const stepTypes = [
+  // ...
+  { value: "custom", label: "Custom", icon: Icon, description: "Custom step" },
+] as const;
 ```
 
 2. **Create editor in `src/components/automationBuilder/nodeDetails/stepTypes/`**:
 ```typescript
-export function CustomStep({ step, id, onUpdate }: StepProps) {
+import { Input } from "../../../ui/input";
+import { Label } from "../../../ui/label";
+import { SelectorButton } from "../customComponents";
+import { StepProps } from "./types";
+
+export function CustomStep({ step, id, onUpdate, onPickWithSetter }: StepProps) {
+  if (step.type !== "custom") return null;
+
   return (
-    <div>
-      <Label>Custom Field</Label>
-      <Input
-        value={step.customField}
-        onChange={(e) => onUpdate(id, "update", { 
-          step: { ...step, customField: e.target.value } 
-        })}
-      />
-    </div>
+    <>
+      <div className="space-y-2">
+        <Label className="text-xs">Custom Field</Label>
+        <Input
+          value={step.customField || ""}
+          onChange={(e) => onUpdate(id, "update", { 
+            step: { ...step, customField: e.target.value } 
+          })}
+          className="text-xs"
+        />
+      </div>
+    </>
   );
 }
 ```
 
-3. **Add execution logic in `src/main/automationExecutor.ts`**:
+3. **Export from `stepTypes/index.ts`** and add to `StepEditor.tsx` switch statement
+
+4. **Add execution logic in `src/main/automationExecutor.ts`**:
 ```typescript
 case "custom": {
   // Use the executor's substitution helper to resolve any `{{var}}` tokens
@@ -249,7 +271,7 @@ case "custom": {
 }
 ```
 
-4. **Update `useNodeActions.ts`** to provide default initial values when creating new nodes.
+5. **Update `useNodeActions.ts`** to provide default initial values when creating new nodes.
 
 ## 🔒 Security Notes
 

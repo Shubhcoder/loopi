@@ -175,6 +175,9 @@ type AutomationStep =
   | { type: "navigate"; id: string; description: string; value: string }
   | { type: "click"; id: string; description: string; selector: string }
   | { type: "type"; id: string; description: string; selector: string; value: string; credentialId?: string }
+  | { type: "extract"; id: string; description: string; selector: string; storeKey?: string }
+  | { type: "setVariable"; id: string; description: string; variableName: string; value: string }
+  | { type: "modifyVariable"; id: string; description: string; variableName: string; operation: ModifyOp; value: string }
   | ...
 
 // TypeScript narrows automatically based on type field
@@ -186,6 +189,9 @@ function execute(step: AutomationStep) {
     case "click":
       // step.selector is known to exist
       return click(step.selector);
+    case "extract":
+      // step.selector and step.storeKey are known
+      return extractText(step.selector, step.storeKey);
   }
 }
 ```
@@ -282,10 +288,14 @@ No global state library (Redux, Zustand) needed—props drilling is minimal due 
 
 1. Define type in `src/types/steps.ts`
 2. Add to `AutomationStep` union
-3. Create editor component in `stepTypes/`
-4. Add execution case in `AutomationExecutor.executeStep()`
-5. Add initial value in `useNodeActions` switch
-6. Add to `stepTypes` UI metadata array
+3. Add to `stepTypes` UI metadata array with icon and description
+4. Create editor component in `stepTypes/` (follow existing patterns like `ExtractStep.tsx`)
+5. Export from `stepTypes/index.ts`
+6. Add case to `StepEditor.tsx` switch statement
+7. Add execution case in `AutomationExecutor.executeStep()`
+8. Add initial value in `useNodeActions` switch
+
+**Example**: See the `Extract` step implementation for a complete reference of this pattern.
 
 ### Custom Conditional Types
 
