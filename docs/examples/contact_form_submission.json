@@ -78,7 +78,7 @@
           "type": "type",
           "description": "Enter message in textarea",
           "selector": "textarea[name='my-textarea']",
-          "value": "Hello, this is a test message from Automa!"
+          "value": "Hello, this is a test message from Loopi!"
         }
       },
       "position": {
@@ -204,7 +204,7 @@
       "type": "type",
       "description": "Enter message in textarea",
       "selector": "textarea[name='my-textarea']",
-      "value": "Hello, this is a test message from Automa!"
+      "value": "Hello, this is a test message from Loopi!"
     },
     {
       "id": "6",
