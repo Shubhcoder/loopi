@@ -1,14 +1,15 @@
 import { Download, Edit, Plus, Upload } from "lucide-react";
-import type { Automation } from "../types";
+import type { StoredAutomation } from "../types";
 import { exportAutomation, importAutomation } from "../utils/automationIO";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { formatDateTime } from "./ui/utils";
 
 interface DashboardProps {
-  automations: Automation[];
+  automations: StoredAutomation[];
   onCreateAutomation: () => void;
-  onEditAutomation: (automation: Automation) => void;
-  onUpdateAutomations: (automations: Automation[]) => void;
+  onEditAutomation: (automation: StoredAutomation) => void;
+  onUpdateAutomations: (automations: StoredAutomation[]) => void;
 }
 
 export function Dashboard({
@@ -20,7 +21,10 @@ export function Dashboard({
   const handleImportAutomation = async () => {
     try {
       const automation = await importAutomation();
-      onUpdateAutomations([...automations, automation]);
+      const id = await window.electronAPI.tree.save(automation);
+      if (id) {
+        onUpdateAutomations([...automations, automation]);
+      }
     } catch (error) {
       console.error("Failed to import automation:", error);
       alert("Failed to import automation. Please check the file format.");
@@ -70,16 +74,27 @@ export function Dashboard({
           <div className="space-y-4">
             {automations.map((automation) => (
               <Card key={automation.id} className="relative">
-                <CardHeader>
+                <CardHeader className="py-6">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-base">{automation.name}</CardTitle>
+                        <CardTitle className="text-2xl">{automation.name}</CardTitle>
                       </div>
-                      <CardDescription>{automation.description}</CardDescription>
+
+                      <CardDescription>
+                        <span className="text-xl">{automation.description}</span>
+                        <br />
+                        <span className="text-md mt-2 block">
+                          <span className="font-medium">Last Modified:</span>{" "}
+                          {formatDateTime(automation.updatedAt, {
+                            timeStyle: "short",
+                            hour12: true,
+                          })}
+                        </span>
+                      </CardDescription>
                     </div>
 
-                    <div className="ml-4 flex flex-col items-end gap-2">
+                    <div className="ml-4 flex flex-col items-end gap-2 self-start">
                       <Button
                         variant="ghost"
                         size="sm"

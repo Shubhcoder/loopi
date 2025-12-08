@@ -1,3 +1,4 @@
+import { Automation, StoredAutomation } from "./automation";
 import { AutomationStep } from "./steps";
 
 export interface ElectronAPI {
@@ -16,6 +17,11 @@ export interface ElectronAPI {
   sendSelector: (selector: string) => void;
   cancelSelector: () => void;
   focusMainWindow?: () => void;
+  tree: {
+    list: () => Promise<Array<StoredAutomation> | []>;
+    load: () => Promise<StoredAutomation | null>;
+    save: (automation: StoredAutomation) => Promise<string>;
+  };
 }
 
 declare global {

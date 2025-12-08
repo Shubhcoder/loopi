@@ -1,11 +1,11 @@
 import { Bot, Grid } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as ReactDOM from "react-dom/client";
 import { AutomationBuilder } from "./components/AutomationBuilder";
 import { Dashboard } from "./components/Dashboard";
 import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
-import { Automation } from "./types";
 import "./index.css";
+import type { StoredAutomation } from "./types";
 
 /**
  * App - Root application component
@@ -18,20 +18,52 @@ import "./index.css";
  */
 export default function App() {
   const [currentView, setCurrentView] = useState<"dashboard" | "builder">("dashboard");
-  const [automations, setAutomations] = useState<Automation[]>([]);
-  const [selectedAutomation, setSelectedAutomation] = useState<Automation | null>(null);
+  const [automations, setAutomations] = useState<StoredAutomation[]>([]);
+  const [selectedAutomation, setSelectedAutomation] = useState<StoredAutomation | null>(null);
+
+  useEffect(() => {
+    const loadSavedTrees = async () => {
+      const savedAutomations = await window.electronAPI.tree.list();
+      if (savedAutomations && savedAutomations.length > 0)
+        savedAutomations.sort(
+          (a: StoredAutomation, b: StoredAutomation) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      setAutomations(savedAutomations);
+    };
+
+    try {
+      loadSavedTrees();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load saved automations");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (automations.length === 0) return;
+
+    const sorted = [...automations].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+
+    if (JSON.stringify(sorted) !== JSON.stringify(automations)) {
+      console.log("updating...");
+      setAutomations(sorted);
+    }
+  }, [automations]);
 
   const handleCreateAutomation = () => {
     setSelectedAutomation(null);
     setCurrentView("builder");
   };
 
-  const handleEditAutomation = (automation: Automation) => {
+  const handleEditAutomation = (automation: StoredAutomation) => {
     setSelectedAutomation(automation);
     setCurrentView("builder");
   };
 
-  const handleSaveAutomation = (automation: Automation) => {
+  const handleSaveAutomation = async (automation: StoredAutomation) => {
     if (selectedAutomation) {
       // Update existing automation
       setAutomations((prev) => prev.map((a) => (a.id === automation.id ? automation : a)));
@@ -39,8 +71,16 @@ export default function App() {
       // Add new automation
       setAutomations((prev) => [...prev, automation]);
     }
-    setSelectedAutomation(null);
-    setCurrentView("dashboard");
+    try {
+      const id = await window.electronAPI.tree.save(automation);
+      if (!id) throw new Error("Failed to retrieve saved file id");
+
+      setSelectedAutomation(null);
+      setCurrentView("dashboard");
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to save: ${automation.name}`);
+    }
   };
 
   return (

@@ -14,12 +14,18 @@
  * See: https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
  */
 import { contextBridge, ipcRenderer } from "electron";
+import { Automation } from "./types";
 import type { AutomationStep } from "./types/steps";
 
 contextBridge.exposeInMainWorld("electronAPI", {
   openBrowser: (url: string) => ipcRenderer.invoke("browser:open", url),
   closeBrowser: () => ipcRenderer.invoke("browser:close"),
   navigate: (url: string) => ipcRenderer.invoke("browser:navigate", url),
+  tree: {
+    save: (automation: Automation) => ipcRenderer.invoke("loopi:saveTree", automation),
+    load: () => ipcRenderer.invoke("loopi:loadTree"),
+    list: () => ipcRenderer.invoke("loopi:listTrees"),
+  },
   runStep: (step: AutomationStep) => ipcRenderer.invoke("browser:runStep", step),
   runConditional: (condition: unknown) => ipcRenderer.invoke("browser:runConditional", condition),
   initVariables: (vars?: Record<string, string>) =>

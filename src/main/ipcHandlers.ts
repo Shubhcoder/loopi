@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import { AutomationExecutor } from "./automationExecutor";
 import { SelectorPicker } from "./selectorPicker";
+import { defaultStorageFolder, listAutomations, loadAutomation, saveAutomation } from "./treeStore";
 import { WindowManager } from "./windowManager";
 
 /**
@@ -68,6 +69,18 @@ export function registerIPCHandlers(
       throw new Error("Browser window not available");
     }
     return await executor.evaluateConditional(browserWindow, config);
+  });
+
+  ipcMain.handle("loopi:listTrees", async (_event) => {
+    return listAutomations(defaultStorageFolder);
+  });
+
+  ipcMain.handle("loopi:saveTree", async (_event, config) => {
+    return saveAutomation(config, defaultStorageFolder);
+  });
+
+  ipcMain.handle("loopi:loadTrees", async (_event, config) => {
+    return loadAutomation(config, defaultStorageFolder);
   });
 
   /**

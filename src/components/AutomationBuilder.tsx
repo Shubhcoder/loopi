@@ -12,6 +12,7 @@ import type {
   NodeData,
   ReactFlowEdge,
   ReactFlowNode,
+  StoredAutomation,
 } from "../types";
 import AutomationNode from "./automationBuilder/AutomationNode";
 import BuilderCanvas from "./automationBuilder/BuilderCanvas";
@@ -24,7 +25,7 @@ const nodeTypes = {
 
 interface AutomationBuilderProps {
   automation?: Automation;
-  onSave: (automation: Automation) => void;
+  onSave: (automation: StoredAutomation) => void;
   onCancel: () => void;
 }
 
@@ -40,6 +41,7 @@ interface AutomationBuilderProps {
  */
 export function AutomationBuilder({ automation, onSave, onCancel }: AutomationBuilderProps) {
   const [name, setName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [description, setDescription] = useState("");
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>([]);
@@ -140,11 +142,12 @@ export function AutomationBuilder({ automation, onSave, onCancel }: AutomationBu
    * Serializes current builder state into Automation object
    * Handles schedule type discrimination and credential extraction
    */
-  const serializeAutomation = useCallback((): Automation => {
+  const serializeAutomation = useCallback((): StoredAutomation => {
     return {
       id: automation?.id || Date.now().toString(),
       name,
       description,
+      updatedAt: new Date().toLocaleString(),
       nodes: nodes.map(({ id, type, data, position }) => ({
         id,
         type,
@@ -178,13 +181,15 @@ export function AutomationBuilder({ automation, onSave, onCancel }: AutomationBu
     };
   }, [automation, name, description, nodes, edges]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setIsSaving(true);
     onSave(serializeAutomation());
+    setIsSaving(false);
   };
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
-  const currentAutomationForExport: Automation | undefined = name.trim()
+  const currentAutomationForExport: StoredAutomation | undefined = name.trim()
     ? serializeAutomation()
     : undefined;
 
@@ -192,6 +197,7 @@ export function AutomationBuilder({ automation, onSave, onCancel }: AutomationBu
     <div className="h-screen flex flex-col">
       <BuilderHeader
         name={name}
+        isSaving={isSaving}
         setName={setName}
         description={description}
         setDescription={setDescription}
