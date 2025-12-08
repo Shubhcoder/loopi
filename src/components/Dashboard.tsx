@@ -86,7 +86,10 @@ export function Dashboard({
                         <br />
                         <span className="text-md mt-2 block">
                           <span className="font-medium">Last Modified:</span>{" "}
-                          {formatDateTime(automation.updatedAt, { relative: true })}
+                          {formatDateTime(automation.updatedAt, {
+                            timeStyle: "short",
+                            hour12: true,
+                          })}
                         </span>
                       </CardDescription>
                     </div>
