@@ -1,6 +1,6 @@
 import { ArrowLeft, Download, Globe, Pause, Play, Save, Settings, Square } from "lucide-react";
 import React from "react";
-import type { Automation } from "../../types";
+import { StoredAutomation } from "../../main/treeStore";
 import { exportAutomation } from "../../utils/automationIO";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
@@ -10,6 +10,7 @@ import { Textarea } from "../ui/textarea";
 
 interface BuilderHeaderProps {
   name: string;
+  isSaving: boolean;
   setName: (v: string) => void;
   description: string;
   setDescription: (v: string) => void;
@@ -20,10 +21,10 @@ interface BuilderHeaderProps {
   runAutomation: () => Promise<void>;
   pauseAutomation: () => void;
   stopAutomation: () => void;
-  handleSave: () => void;
+  handleSave: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onCancel: () => void;
   nodesLength: number;
-  currentAutomation?: Automation;
+  currentAutomation?: StoredAutomation;
 }
 
 /**
@@ -39,6 +40,7 @@ interface BuilderHeaderProps {
 export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
   name,
   setName,
+  isSaving,
   description,
   setDescription,
   isBrowserOpen,
@@ -140,7 +142,7 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
               Export
             </Button>
           )}
-          <Button onClick={handleSave} disabled={!name.trim()}>
+          <Button onClick={handleSave} disabled={!name.trim() || isSaving}>
             <Save className="h-4 w-4 mr-2" />
             Save
           </Button>

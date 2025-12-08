@@ -1,9 +1,9 @@
-import type { Automation } from "../types";
+import { StoredAutomation } from "../main/treeStore";
 
 /**
  * Export automation to JSON file
  */
-export function exportAutomation(automation: Automation): void {
+export function exportAutomation(automation: StoredAutomation): void {
   const dataStr = JSON.stringify(automation, null, 2);
   const dataBlob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(dataBlob);
@@ -20,7 +20,7 @@ export function exportAutomation(automation: Automation): void {
 /**
  * Import automation from JSON file
  */
-export function importAutomation(): Promise<Automation> {
+export function importAutomation(): Promise<StoredAutomation> {
   return new Promise((resolve, reject) => {
     const input = document.createElement("input");
     input.type = "file";
@@ -37,6 +37,9 @@ export function importAutomation(): Promise<Automation> {
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target?.result as string);
+          if (!Object.hasOwn(data, "updatedAt")) {
+            data["updatedAt"] = new Date().toLocaleString();
+          }
 
           // Check if it's an array (export all format)
           if (Array.isArray(data)) {
@@ -56,7 +59,7 @@ export function importAutomation(): Promise<Automation> {
           data.status = "idle";
           delete data.lastRun;
 
-          resolve(data as Automation);
+          resolve(data as StoredAutomation);
         } catch (error) {
           reject(error);
         }
