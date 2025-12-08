@@ -40,6 +40,19 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (automations.length === 0) return;
+
+    const sorted = [...automations].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+
+    if (JSON.stringify(sorted) !== JSON.stringify(automations)) {
+      console.log("updating...");
+      setAutomations(sorted);
+    }
+  }, [automations]);
+
   const handleCreateAutomation = () => {
     setSelectedAutomation(null);
     setCurrentView("builder");
