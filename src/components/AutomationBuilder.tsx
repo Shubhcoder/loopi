@@ -3,7 +3,6 @@ import { OnSelectionChangeParams, useEdgesState, useNodesState } from "reactflow
 import "reactflow/dist/style.css";
 import useExecution from "../hooks/useExecution";
 import useNodeActions from "../hooks/useNodeActions";
-import { StoredAutomation } from "../main/treeStore";
 import type {
   Automation,
   AutomationStep,
@@ -13,6 +12,7 @@ import type {
   NodeData,
   ReactFlowEdge,
   ReactFlowNode,
+  StoredAutomation,
 } from "../types";
 import AutomationNode from "./automationBuilder/AutomationNode";
 import BuilderCanvas from "./automationBuilder/BuilderCanvas";

@@ -11,6 +11,10 @@ export interface Automation {
   steps: AutomationStep[];
 }
 
+export interface StoredAutomation extends Automation {
+  updatedAt: string;
+}
+
 export interface ExecutionLogEntry {
   stepId: string;
   success: boolean;

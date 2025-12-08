@@ -1,5 +1,5 @@
 import { Download, Edit, Plus, Upload } from "lucide-react";
-import { StoredAutomation } from "../main/treeStore";
+import type { StoredAutomation } from "../types";
 import { exportAutomation, importAutomation } from "../utils/automationIO";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";

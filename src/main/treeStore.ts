@@ -1,11 +1,7 @@
 import { app } from "electron";
 import fs from "fs";
 import path from "path";
-import { Automation } from "../types";
-
-export interface StoredAutomation extends Automation {
-  updatedAt: string;
-}
+import type { Automation, StoredAutomation } from "../types";
 
 export const defaultStorageFolder = path.join(app.getPath("userData"), ".trees");
 

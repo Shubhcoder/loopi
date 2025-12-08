@@ -5,7 +5,7 @@ import { AutomationBuilder } from "./components/AutomationBuilder";
 import { Dashboard } from "./components/Dashboard";
 import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
 import "./index.css";
-import { StoredAutomation } from "./main/treeStore";
+import type { StoredAutomation } from "./types";
 
 /**
  * App - Root application component
