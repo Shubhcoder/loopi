@@ -21,6 +21,8 @@ export interface ElectronAPI {
     list: () => Promise<Array<StoredAutomation> | []>;
     load: () => Promise<StoredAutomation | null>;
     save: (automation: StoredAutomation) => Promise<string>;
+    delete: (automationId: string) => Promise<boolean>;
+    loadExample: (fileName: string) => Promise<StoredAutomation>;
   };
 }
 

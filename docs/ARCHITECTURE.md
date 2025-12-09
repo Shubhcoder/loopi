@@ -52,6 +52,11 @@ The main process runs Node.js and manages the application lifecycle. It's organi
   - `browser:runStep`, `browser:runConditional` → AutomationExecutor
   - `pick-selector` → SelectorPicker
   - `browser:closed` event → Main window notification
+  - `loopi:listTrees` → TreeStore: List all saved automations
+  - `loopi:loadTrees` → TreeStore: Load specific automation
+  - `loopi:saveTree` → TreeStore: Save/update automation
+  - `loopi:loadExample` → TreeStore: Load example from `docs/examples/`
+  - `loopi:deleteTree` → TreeStore: Delete automation file from disk
 
 ### Renderer Process (`src/`)
 
@@ -61,9 +66,14 @@ React-based UI running in Chromium with restricted privileges.
 
 ```
 App (root)
-├── Dashboard
-│   └── Automation list & management
-└── AutomationBuilder
+├── Dashboard (src/components/Dashboard.tsx)
+│   ├── Tabs: "Your Automations" | "Examples"
+│   ├── YourAutomations (src/components/dashboard/YourAutomations.tsx)
+│   │   └── Edit/Delete/Export actions
+│   └── Examples (src/components/dashboard/Examples.tsx)
+│       └── Load example automations
+│
+└── AutomationBuilder (src/components/AutomationBuilder.tsx)
     ├── BuilderHeader
     │   ├── Settings dialog (name, description, schedule)
     │   └── Execution controls (run, pause, stop)
@@ -166,6 +176,55 @@ ReactFlow re-renders updated node
    - Recurse
    ↓
 6. Complete: reset state, show success message
+```
+
+### Delete Automation Flow
+
+```
+1. User clicks Delete button in YourAutomations
+   ↓
+2. Confirmation dialog: "Are you sure?"
+   ↓
+3. If confirmed:
+   window.electronAPI.tree.delete(automationId)  [IPC invoke]
+   ↓
+4. Main: ipcHandlers.handle("loopi:deleteTree")
+   ↓
+5. TreeStore.deleteAutomation(id, folder)
+   - Build file path: ~/.config/[AppName]/.trees/tree_[id].json
+   - fs.unlinkSync(filePath)  // Permanent deletion
+   - Return true/false
+   ↓
+6. If success:
+   - Renderer updates local state
+   - Remove automation from automations array
+   - UI re-renders without deleted item
+   ↓
+7. If error:
+   - User sees alert: "Failed to delete automation"
+   - Automation remains in list (no data loss)
+```
+
+### Load Example Flow
+
+```
+1. User clicks "Load Example" button on example card
+   ↓
+2. handleLoadExample(example)
+   ↓
+3. window.electronAPI.tree.loadExample(fileName)  [IPC invoke]
+   ↓
+4. Main: ipcHandlers.handle("loopi:loadExample")
+   ↓
+5. Read file: docs/examples/[fileName].json
+   ↓
+6. Return parsed automation JSON
+   ↓
+7. Renderer:
+   - Generate new ID: Date.now().toString()
+   - window.electronAPI.tree.save(automation)  [IPC invoke]
+   - Add to automations array
+   - Switch to "Your Automations" tab
 ```
 
 ## Type System Design

@@ -25,6 +25,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     save: (automation: Automation) => ipcRenderer.invoke("loopi:saveTree", automation),
     load: () => ipcRenderer.invoke("loopi:loadTree"),
     list: () => ipcRenderer.invoke("loopi:listTrees"),
+    loadExample: (fileName: string) => ipcRenderer.invoke("loopi:loadExample", fileName),
+    delete: (automationId: string) => ipcRenderer.invoke("loopi:deleteTree", automationId),
   },
   runStep: (step: AutomationStep) => ipcRenderer.invoke("browser:runStep", step),
   runConditional: (condition: unknown) => ipcRenderer.invoke("browser:runConditional", condition),

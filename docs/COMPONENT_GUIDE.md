@@ -9,8 +9,15 @@ App (src/app.tsx)
 ├── Router → Dashboard | AutomationBuilder | Credentials
 │
 ├── Dashboard (src/components/Dashboard.tsx)
-│   └── Lists all automations
-│   └── Edit/Delete/Export actions
+│   ├── Tabs: "Your Automations" | "Examples"
+│   │
+│   ├── YourAutomations (src/components/dashboard/YourAutomations.tsx)
+│   │   └── Lists user's automations
+│   │   └── Edit/Delete/Export actions
+│   │
+│   └── Examples (src/components/dashboard/Examples.tsx)
+│       └── Lists 7 example automations
+│       └── "Load Example" button for each
 │
 └── AutomationBuilder (src/components/AutomationBuilder.tsx)
     ├── BuilderHeader
@@ -63,23 +70,76 @@ const [currentAutomation, setCurrentAutomation] = useState<Automation>();
 
 #### Dashboard.tsx (src/components/Dashboard.tsx)
 
-List and manage automations.
+Container component managing automation list and examples with tab navigation.
 
 **Props:**
 ```typescript
 interface DashboardProps {
-  automations: Automation[];
-  onEdit: (automation: Automation) => void;
-  onDelete: (id: string) => void;
-  onNew: () => void;
+  automations: StoredAutomation[];
+  onCreateAutomation: () => void;
+  onEditAutomation: (automation: StoredAutomation) => void;
+  onUpdateAutomations: (automations: StoredAutomation[]) => void;
 }
 ```
 
 **Features:**
-- List all automations
+- Two-tab interface: "Your Automations" and "Examples"
+- Import automation from JSON file
+- Load example automations from `docs/examples/` folder (via IPC)
+- Delete automation with file system cleanup (via IPC)
+- Switches to "Your Automations" tab after import/load
+
+**Key Methods:**
+- `handleImportAutomation()` - Import automation JSON file
+- `handleLoadExample(example)` - Load example via `tree.loadExample()` IPC
+- `handleDeleteAutomation(automationId)` - Delete via `tree.delete()` IPC, removes file from disk
+
+#### YourAutomations.tsx (src/components/dashboard/YourAutomations.tsx)
+
+Tab component displaying user's saved automations.
+
+**Props:**
+```typescript
+interface YourAutomationsProps {
+  automations: StoredAutomation[];
+  totalAutomations: number;
+  onEditAutomation: (automation: StoredAutomation) => void;
+  onDeleteAutomation: (automationId: string) => Promise<void>;
+}
+```
+
+**Features:**
+- Card-based grid layout
+- Shows automation name, description, last update time
 - Edit button → open in builder
-- Delete button → confirm and remove
-- New Automation button → create new
+- Delete button (Trash2 icon) → confirmation dialog → IPC delete
+- Empty state when no automations exist
+
+**Key Methods:**
+- `handleDelete(automationId)` - Shows confirmation dialog, calls async delete callback
+
+#### Examples.tsx (src/components/dashboard/Examples.tsx)
+
+Tab component displaying example automations for user learning.
+
+**Props:**
+```typescript
+interface ExamplesProps {
+  automations: StoredAutomation[];
+  onLoadExample: (example) => Promise<void>;
+}
+```
+
+**Features:**
+- Grid layout with 7 curated example automations
+- Examples: Google Search, Contact Form, E-commerce Price Monitor, GitHub API, Hacker News, Multi-Page Scraper, Pagination Loop
+- "Load Example" button for each example
+- Creates new automation from example data
+- Hover shadow effect for interactivity
+
+**Example Data Source:**
+- Loaded from `docs/examples/*.json` via IPC handler `loopi:loadExample`
+- Files read by main process for security (no direct renderer file access)
 
 #### AutomationBuilder.tsx (src/components/AutomationBuilder.tsx)
 
@@ -287,6 +347,98 @@ const executeGraph = async (nodeId) => {
   // Follows outgoing edges
   // Returns to parent
 };
+```
+
+## Storage & Backend
+
+### TreeStore (src/main/treeStore.ts)
+
+File system layer for automation persistence.
+
+**Key Functions:**
+```typescript
+// List all saved automations
+listAutomations(folder: string): StoredAutomation[]
+
+// Load specific automation by ID
+loadAutomation(id: string, folder: string): StoredAutomation | null
+
+// Save/update automation to disk
+saveAutomation(automation: StoredAutomation, folder: string): string
+
+// Delete automation file permanently
+deleteAutomation(id: string, folder: string): boolean
+
+// Load example from docs/examples folder
+loadExample(fileName: string): StoredAutomation
+```
+
+**Storage Location:**
+- User automations: `~/.config/[AppName]/.trees/tree_[automationId].json`
+- Examples (read-only): `docs/examples/*.json`
+- File format: JSON with StoredAutomation schema
+
+**Example:**
+```typescript
+{
+  "id": "1734000000000",
+  "name": "Google Search Automation",
+  "description": "Search Google and take screenshot",
+  "createdAt": "2024-12-12 10:00:00",
+  "updatedAt": "2024-12-12 10:30:00",
+  "flow": { nodes: [...], edges: [...] }
+}
+```
+
+### IPC Bridge (src/preload.ts)
+
+Exposes secure API to renderer process.
+
+**Available Methods:**
+```typescript
+window.electronAPI.tree = {
+  list(): Promise<StoredAutomation[]>
+  load(): Promise<StoredAutomation | null>
+  save(automation: StoredAutomation): Promise<string>
+  loadExample(fileName: string): Promise<StoredAutomation>
+  delete(automationId: string): Promise<boolean>
+}
+```
+
+**Security Model:**
+- Renderer cannot access filesystem directly
+- All file I/O routed through main process
+- Context isolation prevents direct Node.js access
+- Preload script acts as secure gateway
+
+### IPC Handlers (src/main/ipcHandlers.ts)
+
+Routes IPC messages to appropriate services.
+
+**Automation Handlers:**
+- `loopi:listTrees` → TreeStore.listAutomations()
+- `loopi:loadTrees` → TreeStore.loadAutomation()
+- `loopi:saveTree` → TreeStore.saveAutomation()
+- `loopi:loadExample` → TreeStore.loadExample()
+- `loopi:deleteTree` → TreeStore.deleteAutomation()
+
+**Type Definitions (src/types/globals.d.ts):**
+```typescript
+interface ElectronAPI {
+  tree: {
+    list: () => Promise<StoredAutomation[]>;
+    load: () => Promise<StoredAutomation | null>;
+    save: (automation: StoredAutomation) => Promise<string>;
+    loadExample: (fileName: string) => Promise<StoredAutomation>;
+    delete: (automationId: string) => Promise<boolean>;
+  };
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
 ```
 
 ### UI Component Patterns

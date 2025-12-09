@@ -3,6 +3,7 @@ import squirrelStartup from "electron-squirrel-startup";
 import { AutomationExecutor } from "./automationExecutor";
 import { registerIPCHandlers } from "./ipcHandlers";
 import { SelectorPicker } from "./selectorPicker";
+import { initializeExamples } from "./treeStore";
 import { WindowManager } from "./windowManager";
 
 /**
@@ -33,6 +34,9 @@ registerIPCHandlers(windowManager, executor, picker);
  * Application ready - create main window
  */
 app.on("ready", () => {
+  // Initialize examples storage from source files
+  initializeExamples();
+
   const mainWindow = windowManager.createMainWindow();
 
   // Close browser window when main window is closed
